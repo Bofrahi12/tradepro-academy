@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تواصل معنا | {{SEO_TITLE}}</title>
+<meta name="description" content="تواصل مع فريق TradePro Academy عبر واتساب أو البريد الإلكتروني.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="images/logo.svg">
+<script src="js/config.js"></script><script src="js/store.js"></script><script src="js/app.js"></script>
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<div class="container" style="padding:50px 0 70px;max-width:640px;text-align:center">
+  <h1 style="margin-bottom:10px">تواصل معنا 💬</h1>
+  <p style="color:var(--muted);margin-bottom:30px">عندك سؤال قبل الشراء؟ أو تحتاج مساعدة في حسابك؟ راسلنا وسنرد عليك.</p>
+  <div class="glass" style="margin-bottom:16px">
+    <div style="font-size:2.6rem;margin-bottom:10px">📱</div>
+    <h3>واتساب الدعم</h3>
+    <p style="color:var(--muted);margin-bottom:18px">أسرع طريقة للتواصل — نرد عادة خلال ساعات العمل.</p>
+    <a href="#" id="contact-wa" target="_blank" rel="noopener" class="btn btn-primary btn-lg">راسلنا على واتساب</a>
+  </div>
+  <div class="glass" id="contact-email-wrap" style="display:none">
+    <div style="font-size:2.2rem;margin-bottom:10px">✉️</div>
+    <h3>البريد الإلكتروني</h3>
+    <p><a href="#" id="contact-email" dir="ltr" style="color:var(--green)"></a></p>
+  </div>
+</div>
+<footer class="site-footer"><div class="container">
+  <p>© 2026 <span data-s="COURSE_NAME">TradePro Academy</span></p>
+  <p style="margin-top:10px"><a href="privacy.html" style="color:var(--muted)">سياسة الخصوصية</a> · <a href="terms.html" style="color:var(--muted)">شروط الاستخدام</a> · <a href="/refund" style="color:var(--muted)">سياسة الاسترداد</a></p>
+</div></footer>
+<script>(async function(){
+  await App.renderHeader();
+  await App.applySettings();
+  try {
+    const r = await fetch('/api/contact-info');
+    const info = await r.json();
+    if (info.whatsapp) document.getElementById('contact-wa').href = info.whatsapp;
+    else document.getElementById('contact-wa').style.display = 'none';
+    if (info.email) {
+      document.getElementById('contact-email-wrap').style.display = 'block';
+      const a = document.getElementById('contact-email');
+      a.textContent = info.email; a.href = 'mailto:' + info.email;
+    }
+  } catch {}
+})();</script>
+</body>
+</html>

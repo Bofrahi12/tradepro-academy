@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المنهج الكامل | {{SEO_TITLE}}</title>
+<meta name="description" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/config.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+
+<section class="hero" style="padding:56px 0 20px">
+  <div class="container" style="text-align:center">
+    <span class="eyebrow">📚 المنهج الدراسي</span>
+    <h1>منهج <span data-s="COURSE_NAME">TradePro Academy</span> الكامل</h1>
+    <p class="sub" style="margin-inline:auto">10 Modules متدرجة من الأساسيات إلى بناء خطة تداولك الخاصة.</p>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="container">
+    <div class="accordion" id="curriculum-acc"></div>
+    <div class="final-cta reveal" style="margin-top:50px">
+      <h2 style="margin-bottom:12px">جاهز تبدأ؟</h2>
+      <p style="color:var(--muted);margin-bottom:26px">احصل على المنهج الكامل مع الموارد والتحديثات.</p>
+      <a href="index.html#pricing" class="btn btn-primary btn-lg" data-s="CTA_TEXT">احصل على الدورة الآن</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer"><div class="container">
+  <p>© 2026 <span data-s="COURSE_NAME">TradePro Academy</span> — جميع الحقوق محفوظة.</p>
+</div></footer>
+
+<script>
+(async function () {
+  await App.renderHeader();
+  const s = await App.applySettings();
+  const mods = await Store.curriculum();
+  const total = mods.reduce((a, m) => a + m.lessons.length, 0);
+  document.getElementById('curriculum-acc').innerHTML = mods.map((m, i) => `
+    <div class="acc-item reveal">
+      <button class="acc-head">
+        <span style="display:flex;align-items:center;gap:12px"><span class="num">${i + 1}</span>
+        <span>${App.esc(m.title)}<br><small style="color:var(--muted);font-weight:400">${m.lessons.length} دروس</small></span></span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        ${m.description ? `<p>${App.esc(m.description)}</p>` : ''}
+        <ul>${m.lessons.map((l) => `<li>${App.esc(l.title)}${l.is_free_preview ? ' <span class="pill on">معاينة مجانية</span>' : ''}</li>`).join('')}</ul>
+      </div></div>
+    </div>`).join('');
+  App.courseSchema(s, mods);
+  App.initReveal(); App.initAccordion();
+})();
+</script>
+</body>
+</html>
