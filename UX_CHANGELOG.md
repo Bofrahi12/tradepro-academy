@@ -112,3 +112,35 @@
 - `node --check`: سليم لجميع الملفات ✓
 - `npm test`: 22/22 ناجحة ✓
 - **تغييرات Backend:** صفر — كلها Frontend فقط
+
+---
+
+## 6. Video Poster محلي + Click-to-Play (2026-10-09)
+
+### المشكلة
+- صفحة الدرس الأول كانت تعرض iframe يوتيوب مباشرة، وأحياناً يظهر Overlay خارجي ("Ad blocker app detected") من مصدر الفيديو
+
+### الحل
+- **بوستر محلي:** `public/videos/lesson-1-poster.jpg` (1280×720، 64KB، JPG)
+  - تصميم Dark Premium: خلفية داكنة + أخضر/أزرق
+  - "TradePro Academy" + "تعلّم التداول بطريقة منظمة" + شارة "درس تمهيدي مجاني"
+  - بدون وعود أرباح، بدون شعارات خارجية
+- **Click-to-play:** البوستر يظهر أولاً مع زر "تشغيل الفيديو"؛ الـ iframe الخارجي لا يُحمَّل إلا عند الضغط
+- **Fallback:** رسالة "تعذر تحميل صورة المعاينة، لكن يمكنك تشغيل الفيديو مباشرة" إذا فشل تحميل الصورة
+
+### الملفات
+| الملف | التغيير |
+|-------|---------|
+| `public/videos/lesson-1-poster.jpg` | جديد — البوستر |
+| `public/js/app.js` | `videoEmbed(provider, url, poster)` + `videoPlaceholder()` + delegated click handler |
+| `public/css/style.css` | `.video-placeholder` styles |
+| `public/lesson.html` | تمرير البوستر للدرس المجاني فقط |
+
+### ملاحظة صريحة
+البوستر المحلي يمنع الـ Overlay **قبل** التشغيل فقط. أي إعلانات أو رسائل يضيفها مزود الفيديو **أثناء** تشغيل الـ iframe الخارجي تبقى تحت سيطرة المزود. الحل الجذري: استضافة الفيديو على Storage خاص أو Cloudflare Stream/Vimeo Private أو ملف MP4 محلي.
+
+### تغيير Poster
+استبدل ملف `public/videos/lesson-1-poster.jpg` بأي صورة 1280×720 (JPG < 250KB). للدروس الأخرى، مرّر مساراً مختلفاً كمعامل ثالث لـ `App.videoEmbed()`.
+
+### Backend
+صفر تغييرات — نفس الـ API والصلاحيات.
