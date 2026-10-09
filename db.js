@@ -345,7 +345,7 @@ try {
     5: '/images/thumbnails/lesson-05-timeframes.jpg',
     6: '/images/thumbnails/lesson-06-support-resistance.jpg',
     7: '/images/thumbnails/lesson-07-bos-choch.jpg',
-    8: '/images/thumbnails/read-chart.png',
+    8: '/images/thumbnails/lesson-08-orderblock.jpg',
     14: '/images/thumbnails/trendline.png',
   };
   for (const [lid, thumb] of Object.entries(thumbs)) {
@@ -358,17 +358,16 @@ try {
 
 // Supplementary video resources (bonus videos, wired by lesson order).
 // Format: [lesson_id, title, file_url] — added only if not already present.
+// NOTE: trendlines were merged into the lesson 6 main video, and the order
+// block became lesson 8's main video, so no bonus resources remain. The
+// cleanup below removes any stale resource rows left by earlier wiring.
 try {
-  const bonusVids = [
-    [6, 'فيديو إضافي: خطوط الاتجاه', '/videos/lesson-06-trendlines.mp4'],
-    [7, 'فيديو إضافي: الأوردر بلوك', '/videos/lesson-07-orderblock.mp4'],
+  const staleResourceUrls = [
+    '/videos/lesson-06-trendlines.mp4',
+    '/videos/lesson-07-orderblock.mp4',
   ];
-  for (const [lid, title, url] of bonusVids) {
-    const exists = db.prepare('SELECT id FROM resources WHERE lesson_id = ? AND file_url = ?').get(lid, url);
-    if (!exists) {
-      db.prepare("INSERT INTO resources (lesson_id, title, file_url, file_type, is_public) VALUES (?, ?, ?, 'video', 0)").run(lid, title, url);
-    }
-  }
+  const delStmt = db.prepare('DELETE FROM resources WHERE file_url = ?');
+  for (const url of staleResourceUrls) delStmt.run(url);
 } catch { /* ignore */ }
 
 function getSettings() {
