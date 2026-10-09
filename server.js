@@ -914,7 +914,7 @@ const page = (f) => (req, res) => {
     res.type('html').send(html);
   });
 };
-app.use(express.static(path.join(__dirname, 'public')));
+// Page routes first so server-side title injection applies (static would serve index.html directly for /).
 app.get('/', page('index.html'));
 app.get('/offer', page('offer.html'));
 app.get('/checkout-success', page('checkout-success.html'));
@@ -931,6 +931,9 @@ app.get('/terms', page('terms.html'));
 app.get('/refund', page('refund.html'));
 app.get('/contact', page('contact.html'));
 app.get('/lesson/:id', page('lesson.html'));
+
+// Static assets after page routes (page routes take precedence for /).
+app.use(express.static(path.join(__dirname, 'public')));
 
 if (require.main === module) {
   app.listen(PORT, () => console.log(`[tradepro] http://localhost:${PORT} (DEMO_PURCHASE=${DEMO_PURCHASE}, env=${NODE_ENV})`));
