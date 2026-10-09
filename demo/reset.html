@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كلمة مرور جديدة | {{SEO_TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/config.js"></script><script src="js/store.js"></script><script src="js/app.js"></script>
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<div class="container"><div class="auth-wrap"><div class="form-card">
+  <h2>تعيين كلمة مرور جديدة</h2>
+  <div class="form-err" id="err"></div>
+  <div class="form-ok" id="ok">تم تحديث كلمة المرور بنجاح. <a href="login.html" style="color:var(--green);font-weight:700">سجّل الدخول الآن</a></div>
+  <form id="f">
+    <div class="field"><label>كلمة المرور الجديدة (6 أحرف على الأقل)</label><input type="password" id="password" required minlength="6"></div>
+    <button class="btn btn-primary btn-block" type="submit">حفظ كلمة المرور</button>
+  </form>
+</div></div></div>
+<script>
+(async function () {
+  await App.renderHeader(); await App.applySettings();
+  const token = new URLSearchParams(location.search).get('token');
+  if (!token) { document.getElementById('f').style.display = 'none';
+    const e = document.getElementById('err'); e.textContent = 'رابط غير صالح.'; e.style.display = 'block'; return; }
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('err'); err.style.display = 'none';
+    try {
+      await Store.reset(token, document.getElementById('password').value);
+      document.getElementById('ok').style.display = 'block';
+      document.getElementById('f').style.display = 'none';
+    } catch {
+      err.textContent = 'الرابط منتهي الصلاحية أو غير صالح. اطلب رابطاً جديداً.';
+      err.style.display = 'block';
+    }
+  };
+})();
+</script>
+</body>
+</html>
