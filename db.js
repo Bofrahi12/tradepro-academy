@@ -314,16 +314,20 @@ try {
     db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?")
       .run('https://youtu.be/jKvKN9rj6Q0', row.id);
   }
-  // Course lesson videos (YouTube Unlisted), wired by lesson order.
+  // Course lesson videos, wired by lesson order.
+  // Format: [url, provider] — provider is 'youtube' or 'mp4'
+  // MP4 lessons are force-updated (user uploads new videos via platform)
   const vids = {
-    2: 'https://youtu.be/DSjaVvo4sRM',
-    3: 'https://youtu.be/K7-HgMW_H_U',
-    4: 'https://youtu.be/lUGMR9Qyjmw',
+    2: ['https://youtu.be/DSjaVvo4sRM', 'youtube', false],
+    3: ['https://youtu.be/K7-HgMW_H_U', 'youtube', false],
+    4: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
+    5: ['/videos/lesson-05-timeframes.mp4', 'mp4', true],
+    6: ['/videos/lesson-06-trendlines.mp4', 'mp4', true],
   };
-  for (const [lid, url] of Object.entries(vids)) {
+  for (const [lid, [url, provider, force]] of Object.entries(vids)) {
     const r = db.prepare('SELECT id, video_url FROM lessons WHERE id = ?').get(lid);
-    if (r && !r.video_url) {
-      db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?").run(url, lid);
+    if (r && (!r.video_url || force)) {
+      db.prepare("UPDATE lessons SET video_url = ?, provider = ? WHERE id = ?").run(url, provider, lid);
     }
   }
   // Lesson thumbnails, wired by lesson order (only if empty).
