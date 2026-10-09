@@ -975,6 +975,10 @@ app.get('/lesson/:id', page('lesson.html'));
 
 // Static assets after page routes (page routes take precedence for /).
 app.use(express.static(path.join(__dirname, 'public')));
+// Public seed data for frontend (testimonials, faqs, bonuses)
+app.get('/seed.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'seed.json'));
+});
 
 if (require.main === module) {
   app.listen(PORT, () => console.log(`[tradepro] http://localhost:${PORT} (DEMO_PURCHASE=${DEMO_PURCHASE}, env=${NODE_ENV})`));
