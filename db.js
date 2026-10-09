@@ -333,15 +333,30 @@ try {
   // Lesson thumbnails, wired by lesson order (only if empty).
   const thumbs = {
     4: '/images/thumbnails/hammer-candle.png',
-    6: '/images/thumbnails/support-resistance.jpg',
-    7: '/images/thumbnails/order-blocks.png',
+    5: '/images/thumbnails/lesson-05-timeframes.jpg',
+    6: '/images/thumbnails/lesson-06-support-resistance.jpg',
+    7: '/images/thumbnails/lesson-07-orderblock.jpg',
     8: '/images/thumbnails/read-chart.png',
     14: '/images/thumbnails/trendline.png',
   };
   for (const [lid, thumb] of Object.entries(thumbs)) {
     const r = db.prepare('SELECT id, thumbnail FROM lessons WHERE id = ?').get(lid);
-    if (r && !r.thumbnail) {
+    if (r) {
       db.prepare('UPDATE lessons SET thumbnail = ? WHERE id = ?').run(thumb, lid);
+    }
+  }
+} catch { /* ignore */ }
+
+// Supplementary video resources (bonus videos, wired by lesson order).
+// Format: [lesson_id, title, file_url] — added only if not already present.
+try {
+  const bonusVids = [
+    [6, 'فيديو إضافي: خطوط الاتجاه', '/videos/lesson-06-trendlines.mp4'],
+  ];
+  for (const [lid, title, url] of bonusVids) {
+    const exists = db.prepare('SELECT id FROM resources WHERE lesson_id = ? AND file_url = ?').get(lid, url);
+    if (!exists) {
+      db.prepare("INSERT INTO resources (lesson_id, title, file_url, file_type, is_public) VALUES (?, ?, ?, 'video', 0)").run(lid, title, url);
     }
   }
 } catch { /* ignore */ }
