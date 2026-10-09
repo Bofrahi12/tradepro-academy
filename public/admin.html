@@ -338,19 +338,20 @@ async function renderResources(lessonId) {
       </div>
     </div>
     <div class="table-wrap"><table class="admin-table">
-      <tr><th>العنوان</th><th>النوع</th><th>الرابط</th><th>إجراءات</th></tr>
-      ${list.map((r) => `<tr><td>${E(r.title)}</td><td>${E(r.file_type)}</td>
+      <tr><th>العنوان</th><th>النوع</th><th>عام؟</th><th>الرابط</th><th>إجراءات</th></tr>
+      ${list.map((r) => `<tr><td>${E(r.title)}</td><td>${E(r.file_type)}</td><td>${r.is_public ? '✅' : '🔒'}</td>
         <td dir="ltr" style="text-align:left;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(r.file_url)}</td>
         <td><div class="row-actions"><button class="icon-btn" data-redel="${r.id}" style="color:#ff9a9a">🗑️</button></div></td></tr>`).join('')
-        || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد ملفات — أضف PDF أو Checklist أو Excel</td></tr>'}
+        || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد ملفات — أضف PDF أو Checklist أو Excel</td></tr>'}
     </table></div>`;
   document.getElementById('res-back').onclick = () => { resLessonId = null; document.querySelector('[data-tab="content"]').click(); };
   document.getElementById('res-add').onclick = () => openModal('إضافة ملف للدرس', [
     { label: 'عنوان الملف', value: '' },
     { label: 'رابط الملف', value: '', dir: 'ltr', hint: 'رابط مباشر للـ PDF / Excel / ...' },
     { label: 'النوع', type: 'select', options: [['pdf', 'PDF'], ['checklist', 'Checklist'], ['excel', 'Excel/CSV'], ['other', 'أخرى']], value: 'pdf' },
-  ], async ([title, file_url, file_type]) => {
-    await Store.adminCreate('resources', { lesson_id: lessonId, title, file_url, file_type });
+    { label: 'مورد عام يظهر في الدرس المجاني', type: 'checkbox', value: 0 },
+  ], async ([title, file_url, file_type, is_public]) => {
+    await Store.adminCreate('resources', { lesson_id: lessonId, title, file_url, file_type, is_public: is_public ? 1 : 0 });
     App.toast('تمت الإضافة ✓'); renderResources(lessonId);
   });
   panel.querySelectorAll('[data-redel]').forEach((btn) => btn.onclick = async () => {

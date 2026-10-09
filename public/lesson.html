@@ -135,12 +135,18 @@
   });
 
   // resources
-  if (lesson.resources && lesson.resources.length) {
+  if (Array.isArray(lesson.resources) && lesson.resources.length) {
     document.getElementById('resources-wrap').style.display = 'block';
     const icons = { pdf: '📄', checklist: '✅', excel: '📊', csv: '📊', other: '📎' };
-    document.getElementById('resources').innerHTML = lesson.resources.map((r) => `
-      <div class="res-item"><span>${icons[r.file_type] || '📎'} ${App.esc(r.title)}</span>
-      <a class="btn btn-ghost btn-sm" href="${App.esc(r.file_url)}" download>تحميل</a></div>`).join('');
+    document.getElementById('resources').innerHTML = lesson.resources.map((r) => {
+      const icon = icons[r.file_type] || '📎';
+      const title = App.esc(r.title || 'Resource');
+      const fileType = App.esc(r.file_type || 'file');
+      const downloadButton = r.file_url
+        ? `<a class="btn btn-ghost btn-sm" href="${App.esc(r.file_url)}" download target="_blank" rel="noopener noreferrer">تحميل</a>`
+        : `<span style="color:var(--muted);font-size:.85rem">الرابط غير متوفر</span>`;
+      return `<div class="res-item"><span>${icon} ${title} <small class="ft">${fileType}</small></span>${downloadButton}</div>`;
+    }).join('');
   }
 })();
 </script>

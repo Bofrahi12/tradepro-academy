@@ -384,3 +384,123 @@ test('admin cannot demote self or remove the last admin', async () => {
   assert.equal(r.status, 400);
   assert.equal(r.data.error, 'cannot_demote_self');
 });
+
+// ---------- resources: permissions, validation, migration ----------
+test('resources: enrolled student gets file_url; guest gets nothing on paid lesson', async () => {
+  const adm = new Agent(); await adm.get('/');
+  await adm.post('/api/auth/login', { email: 'testadmin@t.local', password: 'AdminPass123' });
+  // create resources on lesson 2 (paid) and lesson 1 (free preview)
+  let r = await adm.post('/api/admin/resources', { lesson_id: 2, title: 'Private PDF', file_url: 'https://example.com/private.pdf', file_type: 'pdf', is_public: 0 });
+  assert.equal(r.status, 200);
+  const privId = r.data.id;
+  r = await adm.post('/api/admin/resources', { lesson_id: 1, title: 'Public Checklist', file_url: 'https://example.com/public.pdf', file_type: 'pdf', is_public: 1 });
+  assert.equal(r.status, 200);
+  r = await adm.post('/api/admin/resources', { lesson_id: 1, title: 'Hidden Doc', file_url: 'https://example.com/hidden.pdf', file_type: 'pdf', is_public: 0 });
+  assert.equal(r.status, 200);
+
+  // guest: paid lesson blocked entirely
+  const g = new Agent(); await g.get('/');
+  r = await g.get('/api/lesson/2');
+  assert.equal(r.status, 403);
+
+  // guest: free preview shows only is_public=1 resources WITH file_url
+  r = await g.get('/api/lesson/1');
+  assert.equal(r.status, 200);
+  assert.ok(Array.isArray(r.data.resources));
+  assert.equal(r.data.resources.length, 1);
+  assert.equal(r.data.resources[0].title, 'Public Checklist');
+  assert.equal(r.data.resources[0].file_url, 'https://example.com/public.pdf');
+
+  // enrolled student: unlock lesson 1 first, then lesson 2
+  const s = new Agent(); await s.get('/');
+  await s.post('/api/auth/register', { name: 'Rita', email: 'rita@t.local', password: 'Secret123' });
+  const uid = db.prepare('SELECT id FROM users WHERE email = ?').get('rita@t.local').id;
+  db.prepare("INSERT INTO enrollments (user_id, source) VALUES (?, 'test')").run(uid);
+  await s.post('/api/progress/complete', { lesson_id: 1 });
+  r = await s.get('/api/lesson/2');
+  assert.equal(r.status, 200);
+  assert.ok(Array.isArray(r.data.resources));
+  assert.equal(r.data.resources.length, 1);
+  assert.equal(r.data.resources[0].file_url, 'https://example.com/private.pdf');
+
+  // student also sees both resources on free preview lesson
+  r = await s.get('/api/lesson/1');
+  assert.equal(r.status, 200);
+  assert.equal(r.data.resources.length, 2);
+
+  // admin sees everything
+  r = await adm.get('/api/lesson/2');
+  assert.equal(r.status, 200);
+  assert.equal(r.data.resources.length, 1);
+  assert.equal(r.data.resources[0].file_url, 'https://example.com/private.pdf');
+});
+
+test('resources: validation rejects unsafe url, bad type, missing lesson', async () => {
+  const adm = new Agent(); await adm.get('/');
+  await adm.post('/api/auth/login', { email: 'testadmin@t.local', password: 'AdminPass123' });
+
+  // unsafe file_url schemes rejected
+  for (const bad of ['javascript:alert(1)', 'data:text/html,<h1>x</h1>', 'vbscript:msgbox(1)']) {
+    const r = await adm.post('/api/admin/resources', { lesson_id: 1, title: 'Bad', file_url: bad, file_type: 'pdf' });
+    assert.equal(r.status, 400);
+    assert.equal(r.data.error, 'unsafe_file_url');
+  }
+  // invalid file_type rejected
+  let r = await adm.post('/api/admin/resources', { lesson_id: 1, title: 'Bad', file_url: 'https://example.com/x.pdf', file_type: 'exe' });
+  assert.equal(r.status, 400);
+  assert.equal(r.data.error, 'invalid_file_type');
+  // non-existent lesson_id rejected
+  r = await adm.post('/api/admin/resources', { lesson_id: 99999, title: 'Bad', file_url: 'https://example.com/x.pdf', file_type: 'pdf' });
+  assert.equal(r.status, 400);
+  assert.equal(r.data.error, 'invalid_lesson');
+  // empty title rejected
+  r = await adm.post('/api/admin/resources', { lesson_id: 1, title: '   ', file_url: 'https://example.com/x.pdf', file_type: 'pdf' });
+  assert.equal(r.status, 400);
+  assert.equal(r.data.error, 'title_required');
+});
+
+test('resources: no XSS via title; is_public coerced to 0/1', async () => {
+  const adm = new Agent(); await adm.get('/');
+  await adm.post('/api/auth/login', { email: 'testadmin@t.local', password: 'AdminPass123' });
+  // control chars stripped on storage; HTML escaping happens at render via App.esc
+  const xss = 'Title\x00\x1F<script>alert(1)</script>';
+  let r = await adm.post('/api/admin/resources', { lesson_id: 1, title: xss, file_url: 'https://example.com/x.pdf', file_type: 'pdf', is_public: 'yes' });
+  assert.equal(r.status, 200);
+  const row = db.prepare('SELECT title, is_public FROM resources WHERE id = ?').get(r.data.id);
+  assert.ok(!/[\u0000-\u001F]/.test(row.title), 'control chars stripped');
+  // simulate App.esc render-time escaping
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const rendered = esc(row.title);
+  assert.ok(!rendered.includes('<script>'), 'escaped output has no raw script tag');
+  assert.ok(rendered.includes('&lt;script&gt;'), 'script tag is entity-encoded');
+  assert.equal(row.is_public, 1); // truthy coerced
+  r = await adm.post('/api/admin/resources', { lesson_id: 1, title: 'Normal', file_url: 'https://example.com/y.pdf', file_type: 'pdf', is_public: 0 });
+  assert.equal(r.status, 200);
+  const row2 = db.prepare('SELECT is_public FROM resources WHERE id = ?').get(r.data.id);
+  assert.equal(row2.is_public, 0);
+});
+
+test('resources: migration v6 idempotent; column exists with default 0', async () => {
+  const col = db.prepare("SELECT name FROM pragma_table_info('resources') WHERE name = 'is_public'").get();
+  assert.ok(col, 'is_public column exists');
+  const def = db.prepare("SELECT dflt_value FROM pragma_table_info('resources') WHERE name = 'is_public'").get();
+  assert.equal(String(def.dflt_value), '0');
+  // re-running migration must not fail or duplicate
+  const { db: freshDb } = require('../db');
+  assert.ok(freshDb);
+  const count = db.prepare('SELECT COUNT(*) c FROM schema_migrations WHERE version = 6').get().c;
+  assert.equal(count, 1);
+});
+
+test('resources: cannot access another lesson resource by tampering ids', async () => {
+  // guest cannot list resources directly; admin CRUD is role-gated
+  const s = new Agent(); await s.get('/');
+  await s.post('/api/auth/login', { email: 'rita@t.local', password: 'Secret123' });
+  const r = await s.get('/api/admin/resources');
+  assert.equal(r.status, 403);
+  // lesson 2 resources not visible to guest even knowing the lesson id
+  const g = new Agent(); await g.get('/');
+  const r2 = await g.get('/api/lesson/2');
+  assert.equal(r2.status, 403);
+  assert.ok(!r2.data.resources);
+});

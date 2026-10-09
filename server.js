@@ -370,7 +370,21 @@ app.get('/api/lesson/:id', (req, res) => {
   if (privileged && u.role !== 'admin' && !l.is_free_preview && !isLessonUnlocked(u.id, l.id)) {
     return res.status(403).json({ error: 'lesson_locked' });
   }
-  const resources = db.prepare('SELECT id, title, file_type FROM resources WHERE lesson_id = ?').all(l.id);
+  const resources = privileged
+    ? db.prepare(`
+        SELECT id, title, file_type, file_url
+        FROM resources
+        WHERE lesson_id = ?
+        ORDER BY id
+      `).all(l.id)
+    : l.is_free_preview
+      ? db.prepare(`
+          SELECT id, title, file_type, file_url
+          FROM resources
+          WHERE lesson_id = ? AND is_public = 1
+          ORDER BY id
+        `).all(l.id)
+      : [];
   const mod = db.prepare('SELECT id, title FROM modules WHERE id = ?').get(l.module_id);
   const out = { ...l, module: mod, resources };
   out.video_url = protectMediaUrl(l, u);
@@ -682,7 +696,7 @@ app.get('/api/admin/audit-log', requireAdmin, (req, res) => {
 const CRUD_SCHEMAS = {
   modules: { table: 'modules', fields: ['title', 'description', 'sort_order', 'is_visible'] },
   lessons: { table: 'lessons', fields: ['module_id', 'title', 'video_url', 'thumbnail', 'description', 'duration', 'provider', 'sort_order', 'is_visible', 'is_free_preview'] },
-  resources: { table: 'resources', fields: ['lesson_id', 'title', 'file_url', 'file_type'] },
+  resources: { table: 'resources', fields: ['lesson_id', 'title', 'file_url', 'file_type', 'is_public'] },
   bonuses: { table: 'bonuses', fields: ['title', 'description', 'sort_order', 'is_visible'] },
   faqs: { table: 'faqs', fields: ['question', 'answer', 'sort_order', 'is_visible'] },
   testimonials: { table: 'testimonials', fields: ['name', 'role', 'text', 'sort_order', 'is_visible'] },
@@ -741,7 +755,12 @@ function validateCrud(base, body, partial = false) {
       if (!t) errors.push('title_required'); else out.title = t;
     }
     if (need('lesson_id')) {
-      if (!V.isId(b.lesson_id)) errors.push('invalid_lesson'); else out.lesson_id = Number(b.lesson_id);
+      if (!V.isId(b.lesson_id)) {
+        errors.push('invalid_lesson');
+      } else {
+        const lessonExists = db.prepare('SELECT 1 FROM lessons WHERE id = ?').get(Number(b.lesson_id));
+        if (!lessonExists) errors.push('invalid_lesson'); else out.lesson_id = Number(b.lesson_id);
+      }
     }
     if (need('file_url')) {
       const u = String(b.file_url || '').trim();
@@ -750,6 +769,7 @@ function validateCrud(base, body, partial = false) {
     if (need('file_type')) {
       if (!V.isFileType(b.file_type)) errors.push('invalid_file_type'); else out.file_type = b.file_type;
     }
+    if (need('is_public')) out.is_public = b.is_public ? 1 : 0;
   }
   if (base === 'coupons') {
     if (need('code')) {

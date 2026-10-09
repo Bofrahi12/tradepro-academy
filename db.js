@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS resources (
   lesson_id INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   file_url TEXT NOT NULL,
-  file_type TEXT NOT NULL DEFAULT 'other'
+  file_type TEXT NOT NULL DEFAULT 'other',
+  is_public INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS bonuses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,6 +222,13 @@ const MIGRATIONS = [
       };
       const stmt = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
       for (const [k, v] of Object.entries(defaults)) stmt.run(k, v);
+    },
+  },
+  {
+    v: 6,
+    name: 'resources.is_public column',
+    run() {
+      if (!hasColumn('resources', 'is_public')) db.exec('ALTER TABLE resources ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0');
     },
   },
 ];
