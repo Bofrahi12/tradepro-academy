@@ -72,7 +72,10 @@
   document.getElementById('lesson-view').style.display = 'grid';
   document.title = lesson.title + ' | ' + document.title.replace(/^الدرس \| /, '');
 
-  document.getElementById('player').innerHTML = App.videoEmbed(lesson.provider, lesson.video_url);
+  document.getElementById('player').innerHTML = App.videoEmbed(
+    lesson.provider, lesson.video_url,
+    lesson.is_free_preview ? '/videos/lesson-1-poster.jpg' : null
+  );
   document.getElementById('lesson-title').textContent = lesson.title;
   document.getElementById('lesson-meta').textContent =
     `${lesson.module ? lesson.module.title + ' · ' : ''}${lesson.duration ? '⏱ ' + lesson.duration + ' · ' : ''}${lesson.is_free_preview ? '🎁 معاينة مجانية' : ''}`;

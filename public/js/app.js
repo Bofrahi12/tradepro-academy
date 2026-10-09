@@ -160,23 +160,60 @@
   }
 
   // Video embed by provider
-  function videoEmbed(provider, url) {
+  // Click-to-play placeholder for external videos: shows local poster first,
+  // loads the external iframe only after the user clicks play.
+  function videoPlaceholder(embedSrc, allow, poster) {
+    return `<div class="video-placeholder" data-embed-src="${esc(embedSrc)}" data-embed-allow="${esc(allow)}">` +
+      `<img src="${esc(poster)}" alt="معاينة فيديو الدرس" width="1280" height="720" loading="eager" ` +
+      `onerror="this.closest('.video-placeholder').classList.add('poster-failed')">` +
+      `<button type="button" class="video-play-button" data-play aria-label="تشغيل الفيديو">▶ تشغيل الفيديو</button>` +
+      `<p class="poster-fallback-msg">تعذر تحميل صورة المعاينة، لكن يمكنك تشغيل الفيديو مباشرة.</p></div>`;
+  }
+
+  function videoEmbed(provider, url, poster) {
     if (!url) return `<div class="video-empty"><div><div style="font-size:2.4rem;margin-bottom:10px">🎬</div><p>سيتم إضافة فيديو هذا الدرس قريباً.</p></div></div>`;
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
     const vm = url.match(/vimeo\.com\/(\d+)/);
+    let embedSrc = null, allow = '';
     if (provider === 'youtube' || yt) {
       const id = yt ? yt[1] : url;
-      return `<iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" title="فيديو الدرس"></iframe>`;
-    }
-    if (provider === 'vimeo' || vm) {
+      embedSrc = `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=1`;
+      allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    } else if (provider === 'vimeo' || vm) {
       const id = vm ? vm[1] : url;
-      return `<iframe src="https://player.vimeo.com/video/${id}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+      embedSrc = `https://player.vimeo.com/video/${id}?autoplay=1`;
+      allow = 'autoplay; fullscreen; picture-in-picture';
+    } else if (provider === 'cloudflare') {
+      const sep = url.includes('?') ? '&' : '?';
+      embedSrc = `${url}${sep}autoplay=true`;
+      allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
     }
-    if (provider === 'cloudflare') {
-      return `<iframe src="${esc(url)}" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+    if (embedSrc) {
+      if (poster) return videoPlaceholder(embedSrc, allow, poster);
+      const lazySrc = embedSrc.replace('&autoplay=1', '').replace('?autoplay=1', '').replace('?autoplay=true', '').replace('&autoplay=true', '');
+      return `<iframe src="${esc(lazySrc)}" allow="${esc(allow)}" allowfullscreen loading="lazy" title="فيديو الدرس"></iframe>`;
     }
-    return `<video controls preload="metadata" src="${esc(url)}"></video>`;
+    return `<video controls preload="metadata"${poster ? ` poster="${esc(poster)}"` : ''} src="${esc(url)}" playsinline style="width:100%">` +
+      `متصفحك لا يدعم تشغيل الفيديو.</video>`;
   }
+
+  // Delegated click-to-play: swap placeholder for the external iframe (user gesture allows autoplay).
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-play]');
+    if (!btn) return;
+    const ph = btn.closest('.video-placeholder');
+    if (!ph || ph.dataset.playing) return;
+    const src = ph.getAttribute('data-embed-src');
+    if (!src || !src.startsWith('https://')) return;
+    ph.dataset.playing = '1';
+    const iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.setAttribute('allow', ph.getAttribute('data-embed-allow') || 'autoplay; encrypted-media; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('title', 'فيديو الدرس');
+    ph.innerHTML = '';
+    ph.appendChild(iframe);
+  });
 
   function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
