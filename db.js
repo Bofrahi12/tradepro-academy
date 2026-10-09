@@ -236,11 +236,15 @@ const MIGRATIONS = [
     name: 'lesson 1 free preview -> local mp4 (hammer doji)',
     run() {
       db.prepare("UPDATE lessons SET provider = 'mp4', video_url = '/videos/lesson-04-hammer-doji.mp4' WHERE id = 1 AND (provider != 'mp4' OR video_url IS NULL OR video_url = '')").run();
+    },  },
+  {
+    v: 8,
+    name: 'enable testimonials section',
+    run() {
+      db.prepare("UPDATE settings SET value = '1' WHERE key = 'SHOW_TESTIMONIALS'").run();
     },
   },
-];
-
-for (const m of MIGRATIONS) {
+or (const m of MIGRATIONS) {
   const done = db.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(m.v);
   if (!done) {
     m.run();
