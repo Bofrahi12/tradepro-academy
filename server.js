@@ -910,6 +910,8 @@ const page = (f) => (req, res) => {
     if (err) return res.status(404).send('Not found');
     try {
       const s = getSettings();
+      // Computed placeholder: full WhatsApp deep link (works with no JS).
+      s.WHATSAPP_URL = waLink(s, `مرحباً، عندي سؤال حول دورة ${s.COURSE_NAME || ''}`);
       html = html.replace(/\{\{([A-Z][A-Z0-9_]*)\}\}/g, (m, k) =>
         (s[k] !== undefined && s[k] !== null && s[k] !== '') ? String(s[k]) : m);
     } catch {}
