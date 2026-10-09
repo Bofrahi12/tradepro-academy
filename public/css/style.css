@@ -349,8 +349,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 /* Password field with toggle */
 .pass-wrap{position:relative}
 .pass-wrap input{padding-left:44px}
-.pass-toggle{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px 8px;opacity:.7}
-.pass-toggle:hover{opacity:1}
+.pass-toggle{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:1px solid var(--card-border);border-radius:8px;cursor:pointer;font-size:1.05rem;padding:4px 9px;opacity:.95;filter:brightness(1.6) saturate(1.2)}
+.pass-toggle:hover{opacity:1;background:rgba(255,255,255,.14)}
 
 /* Button spinner */
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px}
