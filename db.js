@@ -322,7 +322,7 @@ try {
     3: ['https://youtu.be/K7-HgMW_H_U', 'youtube', false],
     4: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
     5: ['/videos/lesson-05-timeframes.mp4', 'mp4', true],
-    6: ['/videos/lesson-06-trendlines.mp4', 'mp4', true],
+    6: ['/videos/lesson-06-support-resistance.mp4', 'mp4', true],
   };
   for (const [lid, [url, provider, force]] of Object.entries(vids)) {
     const r = db.prepare('SELECT id, video_url FROM lessons WHERE id = ?').get(lid);
