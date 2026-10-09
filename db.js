@@ -331,6 +331,7 @@ try {
   // Format: [url, provider] — provider is 'youtube' or 'mp4'
   // MP4 lessons are force-updated (user uploads new videos via platform)
   const vids = {
+    1: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
     2: ['https://youtu.be/DSjaVvo4sRM', 'youtube', false],
     3: ['https://youtu.be/K7-HgMW_H_U', 'youtube', false],
     4: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
