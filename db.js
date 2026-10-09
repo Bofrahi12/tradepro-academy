@@ -295,6 +295,18 @@ try {
     db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?")
       .run('https://youtu.be/jKvKN9rj6Q0', row.id);
   }
+  // Course lesson videos (YouTube Unlisted), wired by lesson order.
+  const vids = {
+    2: 'https://youtu.be/DSjaVvo4sRM',
+    3: 'https://youtu.be/K7-HgMW_H_U',
+    4: 'https://youtu.be/lUGMR9Qyjmw',
+  };
+  for (const [lid, url] of Object.entries(vids)) {
+    const r = db.prepare('SELECT id, video_url FROM lessons WHERE id = ?').get(lid);
+    if (r && !r.video_url) {
+      db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?").run(url, lid);
+    }
+  }
 } catch { /* ignore */ }
 
 function getSettings() {
