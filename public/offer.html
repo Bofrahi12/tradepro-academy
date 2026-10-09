@@ -69,6 +69,7 @@
     document.getElementById('offer-bonuses').innerHTML=(c.bonuses||[]).slice(0,3).map(b=>`<li>🎁 <b>${App.esc(b.title)}</b>${b.description?`<br><small style="color:var(--muted)">${App.esc(b.description)}</small>`:''}</li>`).join('');
   }catch{}
   if(s.PROMO_VIDEO_URL){document.getElementById('promo-video').innerHTML=App.videoEmbed(s.PROMO_VIDEO_PROVIDER||'youtube',s.PROMO_VIDEO_URL)}
+  else{document.getElementById('promo-video').innerHTML='<video controls preload="metadata" poster="/videos/intro-poster.jpg" playsinline style="width:100%;height:100%"><source src="/videos/intro.mp4" type="video/mp4"></video>'}
   const params=new URLSearchParams(location.search); const source=params.get('utm_source'); if(source) localStorage.setItem('tpa_utm_source',source);
   if (params.get('checkout')==='cancelled') {
     const err=document.getElementById('checkout-error');

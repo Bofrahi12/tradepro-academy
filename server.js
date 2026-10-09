@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const { db, getSettings } = require('./db');
 const V = require('./lib/validate');
@@ -902,7 +903,17 @@ app.use((err, req, res, _next) => {
 });
 
 // ---------- page routes ----------
-const page = (f) => (req, res) => res.sendFile(path.join(__dirname, 'public', f));
+const page = (f) => (req, res) => {
+  // Inject the real SEO title server-side so crawlers and the tab never see {{SEO_TITLE}}.
+  fs.readFile(path.join(__dirname, 'public', f), 'utf8', (err, html) => {
+    if (err) return res.status(404).send('Not found');
+    try {
+      const s = getSettings();
+      html = html.split('{{SEO_TITLE}}').join(String(s.SEO_TITLE || s.COURSE_NAME || 'TradePro Academy'));
+    } catch {}
+    res.type('html').send(html);
+  });
+};
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', page('index.html'));
 app.get('/offer', page('offer.html'));
