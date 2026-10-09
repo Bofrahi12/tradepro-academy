@@ -23,7 +23,7 @@
 
 <div class="announce">🚀 سعر الإطلاق: <b>$20</b> بدل <b>$97</b> — <a href="#pricing">احصل على الدورة الآن</a></div>
 
-<header class="site-header" id="site-header"></header>
+<header class="site-header" id="site-header"><div class="container"><a class="logo" href="/"><img class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span>{{COURSE_NAME}}</span></a><button class="menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">☰</button><nav class="nav-links" id="main-nav"><a href="/">الرئيسية</a><a href="/course">المنهج</a></nav><div class="header-actions"><a class="btn btn-ghost btn-sm" href="/login">دخول</a><a class="btn btn-primary btn-sm" href="/register">ابدأ الآن</a></div></div></header>
 
 <!-- ============ HERO (VSL) ============ -->
 <section class="hero" style="text-align:center;padding-top:64px">
@@ -187,14 +187,14 @@
     <h2 class="section-title reveal">مدرب الدورة</h2>
     <p class="section-sub reveal">تعرّف على من سيأخذ بيدك في هذه الرحلة.</p>
     <div class="instructor reveal">
-      <div id="instructor-photo-wrap"></div>
+      <div id="instructor-photo-wrap"><img class="instructor-photo" src="{{INSTRUCTOR_IMAGE}}" alt="{{INSTRUCTOR_NAME}}"></div>
       <div>
-        <h3 data-s="INSTRUCTOR_NAME">اسم المدرب</h3>
+        <h3 data-s="INSTRUCTOR_NAME">{{INSTRUCTOR_NAME}}</h3>
         <div class="role">متداول محترف · 10 سنوات خبرة</div>
-        <p data-s="INSTRUCTOR_BIO"></p>
+        <p data-s="INSTRUCTOR_BIO">{{INSTRUCTOR_BIO}}</p>
         <ul>
-          <li><b>الخبرة:</b> <span data-s="INSTRUCTOR_EXPERIENCE"></span></li>
-          <li><b>أسلوب التعليم:</b> <span data-s="INSTRUCTOR_STYLE"></span></li>
+          <li><b>الخبرة:</b> <span data-s="INSTRUCTOR_EXPERIENCE">{{INSTRUCTOR_EXPERIENCE}}</span></li>
+          <li><b>أسلوب التعليم:</b> <span data-s="INSTRUCTOR_STYLE">{{INSTRUCTOR_STYLE}}</span></li>
         </ul>
       </div>
     </div>
@@ -253,7 +253,7 @@
 </section>
 
 <!-- ============ TESTIMONIALS ============ -->
-<section id="testimonials" style="padding-top:0">
+<section id="testimonials" style="padding-top:0;display:none">
   <div class="container">
     <h2 class="section-title reveal">آراء الطلاب</h2>
     <div id="testi-wrap"></div>
@@ -309,8 +309,11 @@
 
 <script>
 (async function () {
-  await App.renderHeader();
-  const s = await App.applySettings((st) => {
+  // Never let one failing section block the rest of the page.
+  try { await App.renderHeader(); } catch (e) { /* header keeps its server-rendered default */ }
+  let s = {};
+  try {
+    s = await App.applySettings((st) => {
     document.querySelector('meta[property="og:title"]').setAttribute('content', st.SEO_TITLE || '');
     document.querySelector('meta[property="og:description"]').setAttribute('content', st.META_DESCRIPTION || '');
     if (st.LOGO_URL) document.querySelector('meta[property="og:image"]').setAttribute('content', st.LOGO_URL);
@@ -363,7 +366,8 @@
     if (Number.isInteger(gdays) && gdays >= 0) {
       document.querySelectorAll('.gdays').forEach((el) => { el.textContent = gdays; });
     }
-  });
+    });
+  } catch (e) { /* page keeps server-rendered content */ }
 
   // sticky mobile CTA: show after hero, hide near pricing
   const sticky = document.getElementById('sticky-cta');
@@ -428,7 +432,7 @@
         <div class="glass testi reveal"><div class="stars">★★★★★</div>
         <p>"${App.esc(t.text)}"</p><footer><b>${App.esc(t.name)}</b>${t.role ? ` · ${App.esc(t.role)}` : ''}</footer></div>`).join('') + `</div>`;
     }
-  } catch (e) { document.getElementById('testimonials').style.display = 'none'; } catch (e) {}
+  } catch (e) { document.getElementById('testimonials').style.display = 'none'; }
 
   // coupon + buy (server is the single source of truth for pricing)
   let appliedCoupon = '';

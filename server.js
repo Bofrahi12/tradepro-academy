@@ -904,12 +904,14 @@ app.use((err, req, res, _next) => {
 
 // ---------- page routes ----------
 const page = (f) => (req, res) => {
-  // Inject the real SEO title server-side so crawlers and the tab never see {{SEO_TITLE}}.
+  // Inject settings server-side so crawlers, tabs and no-JS clients see real
+  // content: {{SEO_TITLE}} and any {{SETTING_KEY}} placeholder.
   fs.readFile(path.join(__dirname, 'public', f), 'utf8', (err, html) => {
     if (err) return res.status(404).send('Not found');
     try {
       const s = getSettings();
-      html = html.split('{{SEO_TITLE}}').join(String(s.SEO_TITLE || s.COURSE_NAME || 'TradePro Academy'));
+      html = html.replace(/\{\{([A-Z][A-Z0-9_]*)\}\}/g, (m, k) =>
+        (s[k] !== undefined && s[k] !== null && s[k] !== '') ? String(s[k]) : m);
     } catch {}
     res.type('html').send(html);
   });
