@@ -912,6 +912,23 @@ const page = (f) => (req, res) => {
       const s = getSettings();
       // Computed placeholder: full WhatsApp deep link (works with no JS).
       s.WHATSAPP_URL = waLink(s, `مرحباً، عندي سؤال حول دورة ${s.COURSE_NAME || ''}`);
+      // SEO: canonical + OG image + Course JSON-LD (server-rendered for crawlers).
+      const base = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+      const pagePath = req.path === '/' ? '/' : req.path;
+      s.CANONICAL_URL = base ? base + pagePath : '';
+      s.OG_IMAGE_URL = base ? base + '/images/og-image.jpg' : '';
+      try {
+        const price = parseFloat(s.COURSE_PRICE) || 0;
+        const cur = (s.CURRENCY || 'USD').toUpperCase();
+        s.COURSE_JSONLD = JSON.stringify({
+          '@context': 'https://schema.org', '@type': 'Course',
+          name: s.COURSE_NAME || 'TradePro Academy',
+          description: s.COURSE_DESCRIPTION || s.META_DESCRIPTION || '',
+          inLanguage: 'ar',
+          provider: { '@type': 'Organization', name: s.COURSE_NAME || 'TradePro Academy', url: base || undefined },
+          offers: { '@type': 'Offer', price: String(price), priceCurrency: cur, availability: 'https://schema.org/InStock', url: s.CANONICAL_URL || undefined },
+        });
+      } catch { s.COURSE_JSONLD = ''; }
       html = html.replace(/\{\{([A-Z][A-Z0-9_]*)\}\}/g, (m, k) =>
         (s[k] !== undefined && s[k] !== null && s[k] !== '') ? String(s[k]) : m);
     } catch {}
