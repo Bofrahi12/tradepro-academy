@@ -231,13 +231,6 @@ const MIGRATIONS = [
       if (!hasColumn('resources', 'is_public')) db.exec('ALTER TABLE resources ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0');
     },
   },
-  {
-    v: 7,
-    name: 'lesson 1 free preview -> local mp4 (hammer doji)',
-    run() {
-      db.prepare("UPDATE lessons SET provider = 'mp4', video_url = '/videos/lesson-04-hammer-doji.mp4' WHERE id = 1 AND (provider != 'mp4' OR video_url IS NULL OR video_url = '')").run();
-    },
-  },
 ];
 
 for (const m of MIGRATIONS) {
@@ -325,6 +318,7 @@ try {
   // Format: [url, provider] — provider is 'youtube' or 'mp4'
   // MP4 lessons are force-updated (user uploads new videos via platform)
   const vids = {
+    1: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
     2: ['https://youtu.be/DSjaVvo4sRM', 'youtube', false],
     3: ['https://youtu.be/K7-HgMW_H_U', 'youtube', false],
     4: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
