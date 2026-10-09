@@ -231,6 +231,13 @@ const MIGRATIONS = [
       if (!hasColumn('resources', 'is_public')) db.exec('ALTER TABLE resources ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0');
     },
   },
+  {
+    v: 7,
+    name: 'lesson 1 free preview -> local mp4 (hammer doji)',
+    run() {
+      db.prepare("UPDATE lessons SET provider = 'mp4', video_url = '/videos/lesson-04-hammer-doji.mp4' WHERE id = 1 AND (provider != 'mp4' OR video_url IS NULL OR video_url = '')").run();
+    },
+  },
 ];
 
 for (const m of MIGRATIONS) {
