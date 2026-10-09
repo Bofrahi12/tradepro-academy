@@ -104,7 +104,7 @@
     const vm = url.match(/vimeo\.com\/(\d+)/);
     if (provider === 'youtube' || yt) {
       const id = yt ? yt[1] : url;
-      return `<iframe src="https://www.youtube.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+      return `<iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" title="فيديو الدرس"></iframe>`;
     }
     if (provider === 'vimeo' || vm) {
       const id = vm ? vm[1] : url;
