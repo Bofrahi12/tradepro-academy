@@ -197,6 +197,7 @@ async function renderContent() {
     mods = (await Store.adminList('modules')).sort((a, b) => a.sort_order - b.sort_order);
     lessons = await Store.adminList('lessons');
   } catch (err) {
+    if (err.code === 'password_change_required') { forcePasswordChangeModal(); return; }
     panel.innerHTML = '<div class="card" style="padding:30px;text-align:center;color:#ff6b6b">تعذّر تحميل المحتوى: ' + (err.message || 'خطأ غير معروف') + '<br><button class="btn btn-sm" style="margin-top:12px" onclick="location.reload()">إعادة المحاولة</button></div>';
     return;
   }
