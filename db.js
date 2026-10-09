@@ -276,6 +276,17 @@ function seed() {
       console.log(`[db] seeded admin account: ${adminEmail} (password change required on first login)`);
     }
   }
+  // Second admin (co-owner), via ADMIN2_EMAIL / ADMIN2_PASSWORD env vars.
+  const admin2Email = process.env.ADMIN2_EMAIL;
+  if (admin2Email) {
+    const exists2 = db.prepare('SELECT id FROM users WHERE email = ?').get(admin2Email);
+    if (!exists2) {
+      const admin2Pass = process.env.ADMIN2_PASSWORD || crypto.randomBytes(12).toString('base64url');
+      db.prepare('INSERT INTO users (name, email, password_hash, role, must_change_password) VALUES (?, ?, ?, ?, 1)')
+        .run('Admin', admin2Email, bcrypt.hashSync(admin2Pass, 12), 'admin');
+      console.log(`[db] seeded second admin account: ${admin2Email} (password change required on first login)`);
+    }
+  }
 }
 seed();
 
