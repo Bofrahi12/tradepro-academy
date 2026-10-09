@@ -231,6 +231,13 @@ const MIGRATIONS = [
       if (!hasColumn('resources', 'is_public')) db.exec('ALTER TABLE resources ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0');
     },
   },
+  {
+    v: 7,
+    name: 'lesson 1 free preview -> local mp4 (hammer doji)',
+    run() {
+      db.prepare("UPDATE lessons SET provider = 'mp4', video_url = '/videos/lesson-04-hammer-doji.mp4' WHERE id = 1 AND (provider != 'mp4' OR video_url IS NULL OR video_url = '')").run();
+    },
+  },
 ];
 
 for (const m of MIGRATIONS) {
@@ -318,12 +325,13 @@ try {
   // Format: [url, provider] — provider is 'youtube' or 'mp4'
   // MP4 lessons are force-updated (user uploads new videos via platform)
   const vids = {
-    1: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
     2: ['https://youtu.be/DSjaVvo4sRM', 'youtube', false],
     3: ['https://youtu.be/K7-HgMW_H_U', 'youtube', false],
     4: ['/videos/lesson-04-hammer-doji.mp4', 'mp4', true],
     5: ['/videos/lesson-05-timeframes.mp4', 'mp4', true],
     6: ['/videos/lesson-06-support-resistance.mp4', 'mp4', true],
+    7: ['/videos/lesson-07-bos-choch.mp4', 'mp4', true],
+    8: ['/videos/lesson-08-orderblock.mp4', 'mp4', true],
   };
   for (const [lid, [url, provider, force]] of Object.entries(vids)) {
     const r = db.prepare('SELECT id, video_url FROM lessons WHERE id = ?').get(lid);
@@ -336,7 +344,7 @@ try {
     4: '/images/thumbnails/hammer-candle.png',
     5: '/images/thumbnails/lesson-05-timeframes.jpg',
     6: '/images/thumbnails/lesson-06-support-resistance.jpg',
-    7: '/images/thumbnails/lesson-07-orderblock.jpg',
+    7: '/images/thumbnails/lesson-07-bos-choch.jpg',
     8: '/images/thumbnails/read-chart.png',
     14: '/images/thumbnails/trendline.png',
   };
@@ -353,6 +361,7 @@ try {
 try {
   const bonusVids = [
     [6, 'فيديو إضافي: خطوط الاتجاه', '/videos/lesson-06-trendlines.mp4'],
+    [7, 'فيديو إضافي: الأوردر بلوك', '/videos/lesson-07-orderblock.mp4'],
   ];
   for (const [lid, title, url] of bonusVids) {
     const exists = db.prepare('SELECT id FROM resources WHERE lesson_id = ? AND file_url = ?').get(lid, url);
