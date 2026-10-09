@@ -25,7 +25,10 @@
   }
 
   // Accordion (event delegation)
+  let accordionBound = false;
   function initAccordion() {
+    if (accordionBound) return;
+    accordionBound = true;
     document.addEventListener('click', (e) => {
       const head = e.target.closest('.acc-head');
       if (!head) return;
