@@ -16,9 +16,9 @@
   <p class="sub">مرحباً بعودتك إلى <span data-s="COURSE_NAME">TradePro Academy</span></p>
   <div class="form-err" id="err"></div>
   <form id="f">
-    <div class="field"><label>البريد الإلكتروني</label><input type="email" id="email" required dir="ltr" style="text-align:left"></div>
-    <div class="field"><label>كلمة المرور</label><input type="password" id="password" required></div>
-    <button class="btn btn-primary btn-block" type="submit">دخول</button>
+    <div class="field"><label for="email">البريد الإلكتروني</label><input type="email" id="email" required dir="ltr" style="text-align:left" autocomplete="email"></div>
+    <div class="field"><label for="password">كلمة المرور</label><div class="pass-wrap"><input type="password" id="password" required dir="ltr" style="text-align:left" autocomplete="current-password"><button type="button" class="pass-toggle" id="pass-toggle" aria-label="إظهار كلمة المرور">👁️</button></div></div>
+    <button class="btn btn-primary btn-block" type="submit" id="submit-btn">دخول</button>
   </form>
   <div class="form-link"><a href="/forgot">نسيت كلمة المرور؟</a></div>
   <div class="form-link">ليس لديك حساب؟ <a href="/register">أنشئ حساباً جديداً</a></div>
@@ -26,17 +26,24 @@
 <script>
 (async function () {
   await App.renderHeader(); await App.applySettings();
+  App.initPasswordToggle('password', 'pass-toggle');
   const params = new URLSearchParams(location.search);
-  document.getElementById('f').onsubmit = async (e) => {
+  const form = document.getElementById('f');
+  const btn = document.getElementById('submit-btn');
+  form.onsubmit = async (e) => {
     e.preventDefault();
+    if (btn.disabled) return;
     const err = document.getElementById('err'); err.style.display = 'none';
+    App.btnLoading(btn, true, 'جارٍ تسجيل الدخول...');
     try {
       let u = await Store.login(document.getElementById('email').value.trim(), document.getElementById('password').value);
       if (params.get('enroll') === '1' && Store.demo) { await Store.enrollSelf(); u = await Store.me(); }
       location.href = params.get('next') || (u.role === 'admin' ? '/admin' : '/student');
     } catch (er) {
+      App.btnLoading(btn, false);
       err.textContent = er.code === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة.' : 'حدث خطأ، حاول مجدداً.';
       err.style.display = 'block';
+      err.setAttribute('role', 'alert');
     }
   };
 })();

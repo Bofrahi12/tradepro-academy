@@ -16,20 +16,41 @@
   <p class="sub">خطوة واحدة تفصلك عن بدء رحلة التعلم</p>
   <div class="form-err" id="err"></div>
   <form id="f">
-    <div class="field"><label>الاسم الكامل</label><input type="text" id="name" required></div>
-    <div class="field"><label>البريد الإلكتروني</label><input type="email" id="email" required dir="ltr" style="text-align:left"></div>
-    <div class="field"><label>كلمة المرور (6 أحرف على الأقل)</label><input type="password" id="password" required minlength="6"></div>
-    <button class="btn btn-primary btn-block" type="submit">إنشاء الحساب</button>
+    <div class="field"><label for="name">الاسم الكامل</label><input type="text" id="name" required autocomplete="name"></div>
+    <div class="field"><label for="email">البريد الإلكتروني</label><input type="email" id="email" required dir="ltr" style="text-align:left" autocomplete="email"></div>
+    <div class="field"><label for="password">كلمة المرور (6 أحرف على الأقل)</label><div class="pass-wrap"><input type="password" id="password" required minlength="6" dir="ltr" style="text-align:left" autocomplete="new-password"><button type="button" class="pass-toggle" id="pass-toggle" aria-label="إظهار كلمة المرور">👁️</button></div><div class="pass-strength" id="pass-strength" aria-hidden="true"><i></i></div></div>
+    <button class="btn btn-primary btn-block" type="submit" id="submit-btn">إنشاء الحساب</button>
   </form>
   <div class="form-link">لديك حساب بالفعل؟ <a href="/login">سجّل الدخول</a></div>
 </div></div></div>
 <script>
 (async function () {
   await App.renderHeader(); await App.applySettings();
+  App.initPasswordToggle('password', 'pass-toggle');
+  // password strength indicator
+  const passInput = document.getElementById('password');
+  const strengthBar = document.querySelector('#pass-strength i');
+  passInput.addEventListener('input', () => {
+    const v = passInput.value;
+    let score = 0;
+    if (v.length >= 6) score++;
+    if (v.length >= 10) score++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+    if (/\d/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const pct = Math.min(score / 5 * 100, 100);
+    const colors = ['#ff6b6b', '#ffa94d', '#ffd43b', '#a9e34b', '#51cf66'];
+    strengthBar.style.width = pct + '%';
+    strengthBar.style.background = colors[Math.min(score - 1, 4)] || 'transparent';
+  });
   const params = new URLSearchParams(location.search);
-  document.getElementById('f').onsubmit = async (e) => {
+  const form = document.getElementById('f');
+  const btn = document.getElementById('submit-btn');
+  form.onsubmit = async (e) => {
     e.preventDefault();
+    if (btn.disabled) return;
     const err = document.getElementById('err'); err.style.display = 'none';
+    App.btnLoading(btn, true, 'جارٍ إنشاء الحساب...');
     try {
       let u = await Store.register(
         document.getElementById('name').value.trim(),
@@ -38,8 +59,10 @@
       if (params.get('enroll') === '1' && Store.demo) { await Store.enrollSelf(); u = await Store.me(); }
       location.href = params.get('next') || (u.enrolled ? '/student' : '/#pricing');
     } catch (er) {
+      App.btnLoading(btn, false);
       err.textContent = er.code === 'email_exists' ? 'هذا البريد مسجل بالفعل. سجّل الدخول.' : (er.code === 'invalid_email' ? 'بريد إلكتروني غير صالح.' : 'حدث خطأ، حاول مجدداً.');
       err.style.display = 'block';
+      err.setAttribute('role', 'alert');
     }
   };
 })();

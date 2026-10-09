@@ -45,7 +45,9 @@
 <script>
 const E = App.esc;
 // ---------- generic modal ----------
+let modalPrevFocus = null;
 function openModal(title, fields, onSave) {
+  modalPrevFocus = document.activeElement;
   document.getElementById('modal-title').textContent = title;
   const wrap = document.getElementById('modal-fields');
   wrap.innerHTML = fields.map((f, i) => {
@@ -57,7 +59,11 @@ function openModal(title, fields, onSave) {
     else input = `<input type="${f.type || 'text'}" id="mf-${i}" value="${E(v)}" ${f.dir ? `dir="${f.dir}"` : ''}>`;
     return `<div class="field"><label>${f.label}${f.hint ? ` <small style="color:var(--muted)">${f.hint}</small>` : ''}</label>${input}</div>`;
   }).join('');
-  document.getElementById('modal-back').classList.add('show');
+  const back = document.getElementById('modal-back');
+  back.classList.add('show');
+  back.setAttribute('role', 'dialog');
+  back.setAttribute('aria-modal', 'true');
+  back.setAttribute('aria-label', title);
   document.getElementById('modal-save').onclick = async () => {
     const vals = fields.map((f, i) => {
       const el = document.getElementById('mf-' + i);
@@ -66,10 +72,30 @@ function openModal(title, fields, onSave) {
       return el.value;
     });
     try { await onSave(vals); closeModal(); }
-    catch (e) { App.toast('تعذر الحفظ'); }
+    catch (e) { App.toast('تعذر الحفظ', true); }
   };
+  // focus first field; trap Tab inside modal; close on Escape
+  const first = wrap.querySelector('input, select, textarea');
+  if (first) first.focus();
 }
-function closeModal() { document.getElementById('modal-back').classList.remove('show'); }
+function closeModal() {
+  document.getElementById('modal-back').classList.remove('show');
+  if (modalPrevFocus && modalPrevFocus.focus) modalPrevFocus.focus();
+  modalPrevFocus = null;
+}
+document.addEventListener('keydown', (e) => {
+  const back = document.getElementById('modal-back');
+  if (!back || !back.classList.contains('show')) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key === 'Tab') {
+    const focusables = back.querySelectorAll('input, select, textarea, button:not([style*="display: none"])');
+    const list = [...focusables].filter((el) => el.offsetParent !== null);
+    if (!list.length) return;
+    const first = list[0], last = list[list.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
 document.getElementById('modal-cancel').onclick = closeModal;
 document.getElementById('modal-back').addEventListener('click', (e) => { if (e.target.id === 'modal-back') closeModal(); });
 

@@ -79,7 +79,14 @@
   document.getElementById('total-count').textContent = total;
   if (current) {
     document.getElementById('continue-btn').href = '/lesson/' + current.id;
-    document.getElementById('last-lesson-line').textContent = `الدرس الحالي: ${current.moduleTitle} — ${current.title}`;
+    if (doneCount === 0) {
+      document.getElementById('last-lesson-line').textContent = 'ابدأ من الدرس الأول — بالتوفيق! 🚀';
+    } else if (doneCount === total && total > 0) {
+      document.getElementById('last-lesson-line').textContent = '🎉 مبروك! أكملت الدورة كاملة.';
+      document.getElementById('continue-btn').textContent = 'مراجعة الدروس ←';
+    } else {
+      document.getElementById('last-lesson-line').textContent = `الدرس الحالي: ${current.moduleTitle} — ${current.title}`;
+    }
   }
 
   document.getElementById('sidebar').innerHTML =

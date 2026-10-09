@@ -2,18 +2,37 @@
 (function () {
   'use strict';
 
-  // Toast
+  // Toast (accessible: role="status" for polite announcements)
   let toastEl;
-  function toast(msg) {
+  function toast(msg, isError) {
     if (!toastEl) {
       toastEl = document.createElement('div');
       toastEl.id = 'toast';
+      toastEl.setAttribute('role', 'status');
+      toastEl.setAttribute('aria-live', 'polite');
       document.body.appendChild(toastEl);
     }
+    toastEl.setAttribute('role', isError ? 'alert' : 'status');
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastEl._t);
     toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 2600);
+  }
+
+  // Skip link (injected once for keyboard users)
+  function initSkipLink() {
+    if (document.getElementById('skip-link')) return;
+    // ensure main content landmark exists
+    let main = document.getElementById('main-content');
+    if (!main) {
+      main = document.querySelector('main') || document.querySelector('.container');
+      if (main && !main.id) main.id = 'main-content';
+    }
+    const a = document.createElement('a');
+    a.id = 'skip-link';
+    a.href = '#main-content';
+    a.textContent = 'تخطي إلى المحتوى الرئيسي';
+    document.body.prepend(a);
   }
 
   // Reveal on scroll
@@ -24,18 +43,39 @@
     document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
   }
 
-  // Accordion (event delegation)
+  // Accordion (event delegation, accessible: aria-expanded + keyboard)
   let accordionBound = false;
   function initAccordion() {
     if (accordionBound) return;
     accordionBound = true;
-    document.addEventListener('click', (e) => {
-      const head = e.target.closest('.acc-head');
-      if (!head) return;
+    // initialize aria attributes on existing accordions
+    document.querySelectorAll('.acc-item').forEach((item, i) => {
+      const head = item.querySelector('.acc-head');
+      const body = item.querySelector('.acc-body');
+      if (head && body) {
+        const bodyId = body.id || `acc-body-${i}`;
+        body.id = bodyId;
+        head.setAttribute('aria-expanded', item.classList.contains('open') ? 'true' : 'false');
+        head.setAttribute('aria-controls', bodyId);
+      }
+    });
+    const toggle = (head) => {
       const item = head.closest('.acc-item');
+      if (!item) return;
       const body = item.querySelector('.acc-body');
       const open = item.classList.toggle('open');
-      body.style.maxHeight = open ? body.scrollHeight + 'px' : '0';
+      head.setAttribute('aria-expanded', String(open));
+      if (body) body.style.maxHeight = open ? body.scrollHeight + 'px' : '0';
+    };
+    document.addEventListener('click', (e) => {
+      const head = e.target.closest('.acc-head');
+      if (head) toggle(head);
+    });
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('acc-head')) {
+        e.preventDefault();
+        toggle(e.target);
+      }
     });
   }
 
@@ -67,10 +107,29 @@
       </div>`;
     const menu = document.getElementById('menu-toggle');
     const nav = document.getElementById('main-nav');
-    if (menu && nav) menu.onclick = () => {
-      const open = nav.classList.toggle('open');
-      menu.setAttribute('aria-expanded', String(open));
-    };
+    if (menu && nav) {
+      const setMenu = (open) => {
+        nav.classList.toggle('open', open);
+        menu.setAttribute('aria-expanded', String(open));
+        menu.setAttribute('aria-label', open ? 'إغلاق القائمة' : 'فتح القائمة');
+      };
+      menu.onclick = (e) => {
+        e.stopPropagation();
+        setMenu(!nav.classList.contains('open'));
+      };
+      // close on link click (mobile)
+      nav.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
+      // close on outside click
+      document.addEventListener('click', (e) => {
+        if (nav.classList.contains('open') && !nav.contains(e.target) && e.target !== menu && !menu.contains(e.target)) {
+          setMenu(false);
+        }
+      });
+      // close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && nav.classList.contains('open')) setMenu(false);
+      });
+    }
     const lo = document.getElementById('logout-btn');
     if (lo) lo.onclick = async () => { await Store.logout(); location.href = '/'; };
     // apply course name from settings
@@ -187,6 +246,32 @@
     location.href = '/login?next=' + next;
   }
 
-  window.App = { toast, initReveal, initAccordion, renderHeader, applySettings, videoEmbed, esc, fmtPrice, courseSchema, initConsentAnalytics, requireLoginRedirect };
-  document.addEventListener('DOMContentLoaded', () => { initReveal(); initAccordion(); });
+  // Password visibility toggle (call with input id)
+  function initPasswordToggle(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!input || !btn) return;
+    btn.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? '🙈' : '👁️';
+      btn.setAttribute('aria-label', show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+    });
+  }
+
+  // Button loading state (prevents double-submit)
+  function btnLoading(btn, loading, text) {
+    if (!btn) return;
+    if (loading) {
+      if (!btn.dataset.origText) btn.dataset.origText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> ' + esc(text || 'جارٍ التحميل...');
+    } else {
+      btn.disabled = false;
+      if (btn.dataset.origText) btn.textContent = btn.dataset.origText;
+    }
+  }
+
+  window.App = { toast, initReveal, initAccordion, initSkipLink, initPasswordToggle, btnLoading, renderHeader, applySettings, videoEmbed, esc, fmtPrice, courseSchema, initConsentAnalytics, requireLoginRedirect };
+  document.addEventListener('DOMContentLoaded', () => { initSkipLink(); initReveal(); initAccordion(); });
 })();

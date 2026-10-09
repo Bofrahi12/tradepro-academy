@@ -24,6 +24,7 @@
   <div id="lesson-view" style="display:none" class="app-layout">
     <aside class="sidebar" id="sidebar"></aside>
     <main>
+      <nav class="breadcrumb" aria-label="مسار التنقل" id="breadcrumb" style="display:none"></nav>
       <div class="video-wrap" id="player"></div>
       <div class="lesson-head">
         <div><h2 id="lesson-title"></h2><div class="lesson-meta" id="lesson-meta"></div></div>
@@ -76,6 +77,12 @@
   document.getElementById('lesson-meta').textContent =
     `${lesson.module ? lesson.module.title + ' · ' : ''}${lesson.duration ? '⏱ ' + lesson.duration + ' · ' : ''}${lesson.is_free_preview ? '🎁 معاينة مجانية' : ''}`;
   document.getElementById('lesson-desc').textContent = lesson.description || '';
+  // breadcrumb: منصتي › Module › الدرس
+  const bc = document.getElementById('breadcrumb');
+  bc.style.display = 'block';
+  bc.innerHTML = `<a href="/student">منصتي</a><span aria-hidden="true"> › </span>` +
+    (lesson.module ? `<a href="/course">${App.esc(lesson.module.title)}</a><span aria-hidden="true"> › </span>` : '') +
+    `<span aria-current="page">${App.esc(lesson.title)}</span>`;
 
   // viewer state: guests see free preview without tracking/notes
   let viewer = null;

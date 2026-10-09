@@ -338,3 +338,30 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:.9rem}
 .lesson-thumb{width:96px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--card-border)}
 .acc-body-inner .lesson-row{padding-right:8px}
 .acc-body-inner .lesson-row::before{display:none}
+
+/* Skip link for keyboard users */
+#skip-link{position:absolute;top:-60px;right:16px;z-index:10000;background:var(--green);color:#06130c;font-weight:700;padding:10px 18px;border-radius:10px;transition:top .2s;text-decoration:none}
+#skip-link:focus{top:12px}
+
+/* Visible focus for keyboard navigation */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* Password field with toggle */
+.pass-wrap{position:relative}
+.pass-wrap input{padding-left:44px}
+.pass-toggle{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px 8px;opacity:.7}
+.pass-toggle:hover{opacity:1}
+
+/* Button spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+
+/* Password strength */
+.pass-strength{height:4px;border-radius:2px;background:var(--card-border);margin-top:6px;overflow:hidden}
+.pass-strength i{display:block;height:100%;width:0;transition:width .3s,background .3s}
+
+/* Breadcrumb */
+.breadcrumb{font-size:.88rem;color:var(--muted);margin-bottom:14px}
+.breadcrumb a{color:var(--green);text-decoration:none}
+.breadcrumb a:hover{text-decoration:underline}
