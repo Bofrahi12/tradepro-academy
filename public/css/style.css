@@ -331,3 +331,10 @@ table.admin-table{width:100%;border-collapse:collapse;font-size:.9rem}
 .check-list li::before{content:"✓";position:absolute;right:2px;color:var(--green);font-weight:800}
 .cross-list li::before{content:"✕";position:absolute;right:2px;color:#ff8a8a;font-weight:800}
 #consent-bar{position:fixed;bottom:0;right:0;left:0;z-index:9999;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(10,17,40,.97);border-top:1px solid var(--card-border);padding:14px 20px;font-size:.9rem;color:var(--muted);backdrop-filter:blur(8px)}
+
+/* Lesson thumbnails in curriculum accordion */
+.lesson-list{list-style:none;display:grid;gap:10px;margin-top:6px;padding:0}
+.lesson-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;background:rgba(255,255,255,.02)}
+.lesson-thumb{width:96px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--card-border)}
+.acc-body-inner .lesson-row{padding-right:8px}
+.acc-body-inner .lesson-row::before{display:none}

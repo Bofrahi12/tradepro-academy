@@ -54,7 +54,7 @@
       </button>
       <div class="acc-body"><div class="acc-body-inner">
         ${m.description ? `<p>${App.esc(m.description)}</p>` : ''}
-        <ul>${m.lessons.map((l) => `<li>${App.esc(l.title)}${l.is_free_preview ? ' <span class="pill on">معاينة مجانية</span>' : ''}</li>`).join('')}</ul>
+        <ul class="lesson-list">${m.lessons.map((l) => `<li class="lesson-row">${l.thumbnail ? `<img src="${App.esc(l.thumbnail)}" alt="" loading="lazy" class="lesson-thumb">` : ''}<span>${App.esc(l.title)}${l.is_free_preview ? ' <span class="pill on">معاينة مجانية</span>' : ''}</span></li>`).join('')}</ul>
       </div></div>
     </div>`).join('');
   App.courseSchema(s, mods);
