@@ -288,6 +288,15 @@ try {
   }
 } catch { /* lessons table may not exist yet in odd states */ }
 
+// Free-preview video: wire the public YouTube video so fresh DB seeds keep it.
+try {
+  const row = db.prepare('SELECT id, video_url FROM lessons WHERE is_free_preview = 1 ORDER BY id LIMIT 1').get();
+  if (row && !row.video_url) {
+    db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?")
+      .run('https://youtu.be/jKvKN9rj6Q0', row.id);
+  }
+} catch { /* ignore */ }
+
 function getSettings() {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const o = {};
