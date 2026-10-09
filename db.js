@@ -307,6 +307,20 @@ try {
       db.prepare("UPDATE lessons SET video_url = ?, provider = 'youtube' WHERE id = ?").run(url, lid);
     }
   }
+  // Lesson thumbnails, wired by lesson order (only if empty).
+  const thumbs = {
+    4: '/images/thumbnails/hammer-candle.png',
+    6: '/images/thumbnails/support-resistance.jpg',
+    7: '/images/thumbnails/order-blocks.png',
+    8: '/images/thumbnails/read-chart.png',
+    14: '/images/thumbnails/trendline.png',
+  };
+  for (const [lid, thumb] of Object.entries(thumbs)) {
+    const r = db.prepare('SELECT id, thumbnail FROM lessons WHERE id = ?').get(lid);
+    if (r && !r.thumbnail) {
+      db.prepare('UPDATE lessons SET thumbnail = ? WHERE id = ?').run(thumb, lid);
+    }
+  }
 } catch { /* ignore */ }
 
 function getSettings() {
