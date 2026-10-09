@@ -1,1 +1,22 @@
-{"dependencies":{"bcryptjs":"^2.4.3","express":"^4.19.2","express-session":"^1.18.0"},"description":"TradePro Academy — Arabic trading course platform (landing + student portal + admin)","engines":{"node":">=22"},"main":"server.js","name":"tradepro-academy","scripts":{"dev":"node server.js","start":"node server.js"},"version":"1.0.0"}
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "nodemailer": "^10.0.16"
+  },
+  "description": "TradePro Academy \u2014 Arabic trading course platform (landing + student portal + admin)",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "server.js",
+  "name": "tradepro-academy",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "test": "node --test tests/run.js",
+    "backup": "node scripts/backup-db.js",
+    "migrate": "node scripts/migrate.js"
+  },
+  "version": "1.0.0"
+}

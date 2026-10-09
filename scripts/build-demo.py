@@ -30,6 +30,10 @@ COMMON = [
     ('src="/js/store.js"', 'src="js/store.js"'),
     ('src="/js/app.js"', 'src="js/app.js"'),
     ('href="/course"', 'href="course.html"'),
+    ('href="/images/', 'href="images/'),
+    ('src="/images/', 'src="images/'),
+    ('href="/privacy"', 'href="privacy.html"'),
+    ('href="/terms"', 'href="terms.html"'),
     ('href="/login"', 'href="login.html"'),
     ('href="/register"', 'href="register.html"'),
     ('href="/forgot"', 'href="forgot.html"'),
@@ -87,7 +91,8 @@ patch(p, [
     ('<a href="/student">', '<a href="student.html">'),
     ('<a class="btn btn-ghost btn-sm" href="/login">', '<a class="btn btn-ghost btn-sm" href="login.html">'),
     ('<a class="btn btn-primary btn-sm" href="/register">', '<a class="btn btn-primary btn-sm" href="register.html">'),
-    ('<a class="logo" href="/">', '<a class="logo" href="index.html">'),
+    ('<a class="logo" href="/"><img class="logo-mark" src="/images/logo.svg"',
+     '<a class="logo" href="index.html"><img class="logo-mark" src="images/logo.svg"'),
 ])
 
 # lesson.html: read id from ?id= (demo) as well as path

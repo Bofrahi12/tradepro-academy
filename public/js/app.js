@@ -47,7 +47,7 @@
     ];
     mount.innerHTML = `
       <div class="container">
-        <a class="logo" href="/"><span class="logo-mark">T</span><span data-s="COURSE_NAME">TradePro Academy</span></a>
+        <a class="logo" href="/"><img class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span data-s="COURSE_NAME">TradePro Academy</span></a>
         <button class="menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">☰</button>
         <nav class="nav-links" id="main-nav">${links.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}
           ${user && user.role === 'admin' ? '<a href="/admin">لوحة الإدارة</a>' : ''}
@@ -55,7 +55,8 @@
         </nav>
         <div class="header-actions">
           ${user
-            ? `<span style="color:var(--muted);font-size:.9rem">مرحباً، ${esc(user.name.split(' ')[0])}</span>
+            ? `${user.role !== 'admin' && !user.enrolled ? '<a class="btn btn-primary btn-sm" href="/#pricing">أكمل الشراء</a>' : ''}
+               <span style="color:var(--muted);font-size:.9rem">مرحباً، ${esc(user.name.split(' ')[0])}</span>
                <button class="btn btn-ghost btn-sm" id="logout-btn">خروج</button>`
             : `<a class="btn btn-ghost btn-sm" href="/login">دخول</a>
                <a class="btn btn-primary btn-sm" href="/register">ابدأ الآن</a>`}
@@ -125,7 +126,41 @@
     return `${v} ${cur}`;
   }
 
-  // JSON-LD Course schema
+  // Consent-aware analytics: GA4 + Meta Pixel load only after user consent.
+  function initConsentAnalytics(cfg) {
+    const KEY = 'tpa_consent';
+    const ga4 = cfg.ga4, pixel = cfg.metaPixel;
+    if (!ga4 && !pixel) return;
+    const load = () => {
+      if (ga4 && !document.querySelector('script[data-ga4]')) {
+        const s1 = document.createElement('script'); s1.async = true; s1.setAttribute('data-ga4', '1');
+        s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga4);
+        document.head.appendChild(s1);
+        const s2 = document.createElement('script'); s2.setAttribute('data-ga4', '1');
+        s2.text = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${ga4}');`;
+        document.head.appendChild(s2);
+      }
+      if (pixel && !document.querySelector('script[data-fbp]')) {
+        const s = document.createElement('script'); s.setAttribute('data-fbp', '1');
+        s.text = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixel}');fbq('track','PageView');`;
+        document.head.appendChild(s);
+      }
+    };
+    let choice = null;
+    try { choice = localStorage.getItem(KEY); } catch {}
+    if (choice === 'accepted') { load(); return; }
+    if (choice === 'declined') return;
+    const bar = document.createElement('div');
+    bar.id = 'consent-bar';
+    bar.innerHTML = `<span>نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس أداء الموقع.</span>
+      <span style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" id="consent-ok">موافق</button>
+      <button class="btn btn-ghost btn-sm" id="consent-no">رفض</button></span>`;
+    document.body.appendChild(bar);
+    bar.querySelector('#consent-ok').onclick = () => { try { localStorage.setItem(KEY, 'accepted'); } catch {} bar.remove(); load(); };
+    bar.querySelector('#consent-no').onclick = () => { try { localStorage.setItem(KEY, 'declined'); } catch {} bar.remove(); };
+  }
+
+  // JSON-LD Course schema — workload comes from COURSE_HOURS setting (never lessons=hours)
   function courseSchema(s, modules) {
     const data = {
       '@context': 'https://schema.org', '@type': 'Course',
@@ -133,11 +168,10 @@
       provider: { '@type': 'Organization', name: s.COURSE_NAME, sameAs: location.origin },
     };
     if (modules && modules.length) {
-      data.hasCourseInstance = {
-        '@type': 'CourseInstance',
-        courseMode: 'online',
-        courseWorkload: `PT${modules.reduce((a, m) => a + m.lessons.length, 0)}H`,
-      };
+      const hours = parseInt(s.COURSE_HOURS, 10);
+      if (Number.isInteger(hours) && hours > 0) {
+        data.hasCourseInstance = { '@type': 'CourseInstance', courseMode: 'online', courseWorkload: `PT${hours}H` };
+      }
     }
     const el = document.createElement('script');
     el.type = 'application/ld+json';
@@ -150,6 +184,6 @@
     location.href = '/login?next=' + next;
   }
 
-  window.App = { toast, initReveal, initAccordion, renderHeader, applySettings, videoEmbed, esc, fmtPrice, courseSchema, requireLoginRedirect };
+  window.App = { toast, initReveal, initAccordion, renderHeader, applySettings, videoEmbed, esc, fmtPrice, courseSchema, initConsentAnalytics, requireLoginRedirect };
   document.addEventListener('DOMContentLoaded', () => { initReveal(); initAccordion(); });
 })();

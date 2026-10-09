@@ -32,7 +32,7 @@
     try {
       let u = await Store.login(document.getElementById('email').value.trim(), document.getElementById('password').value);
       if (params.get('enroll') === '1' && Store.demo) { await Store.enrollSelf(); u = await Store.me(); }
-      location.href = params.get('next') || (u.role === 'admin' ? '/admin' : (u.enrolled ? '/student' : '/'));
+      location.href = params.get('next') || (u.role === 'admin' ? '/admin' : '/student');
     } catch (er) {
       err.textContent = er.code === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة.' : 'حدث خطأ، حاول مجدداً.';
       err.style.display = 'block';

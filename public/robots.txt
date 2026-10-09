@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bofrahi12.github.io/tradepro-academy-demo/sitemap.xml

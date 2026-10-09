@@ -6,9 +6,14 @@
   const CFG = window.APP_CONFIG || { api: '/api', demo: true };
   const DEMO_KEY = 'tpa_demo_v1';
 
+  function csrfToken() {
+    const m = document.cookie.match(/(?:^|;\s*)tpa_csrf=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
   async function apiFetch(path, opts) {
     const r = await fetch(CFG.api + path, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken() },
       credentials: 'same-origin',
       ...(opts || {}),
     });
@@ -24,9 +29,9 @@
   function demoSave(s) { localStorage.setItem(DEMO_KEY, JSON.stringify(s)); }
   async function demoSeed() {
     let s = demoLoad();
-    if (s && s.v === 1) return s;
+    if (s && s.v === 7) return s;
     const seed = await (await fetch('seed.json')).json();
-    s = { v: 1, session: null, users: [], enrollments: [], progress: [], notes: [],
+    s = { v: 7, session: null, users: [], enrollments: [], progress: [], notes: [],
           settings: { ...seed.settings }, modules: [], lessons: [], faqs: [], bonuses: [],
           testimonials: [], coupons: seed.coupons.map(c => ({ id: c.code, ...c, is_active: 1 })) };
     let mid = 1, lid = 1;
@@ -39,6 +44,7 @@
       mid++;
     });
     s.faqs = seed.faqs.map((f, i) => ({ id: i + 1, question: f.q, answer: f.a, sort_order: i, is_visible: 1 }));
+    s.testimonials = (seed.testimonials || []).map((t, i) => ({ id: i + 1, ...t, sort_order: i, is_visible: 1 }));
     s.bonuses = seed.bonuses.map((b, i) => ({ id: i + 1, ...b, sort_order: i, is_visible: 1 }));
     s.resources = [];
     // demo admin (NOT secure — demo only)
@@ -161,6 +167,7 @@
       return {
         faqs: s.faqs.filter(f => f.is_visible).sort((a, b) => a.sort_order - b.sort_order),
         bonuses: s.bonuses.filter(b => b.is_visible).sort((a, b) => a.sort_order - b.sort_order),
+        testimonials: s.testimonials.filter(t => t.is_visible).sort((a, b) => a.sort_order - b.sort_order),
       };
     },
     async adminUsers() {
@@ -190,7 +197,10 @@
     forgot: (e) => CFG.demo ? Demo.forgot(e) : apiFetch('/auth/forgot', { method: 'POST', body: JSON.stringify({ email: e }) }),
     reset: (t, p) => CFG.demo ? Demo.reset(t, p) : apiFetch('/auth/reset', { method: 'POST', body: JSON.stringify({ token: t, password: p }) }),
     enrollSelf: () => CFG.demo ? Demo.enrollSelf() : apiFetch('/enroll/self', { method: 'POST' }),
-    coupon: (c) => CFG.demo ? Demo.coupon(c) : apiFetch('/coupon/' + encodeURIComponent(c)),
+    coupon: (c) => CFG.demo ? Demo.coupon(c) : apiFetch('/coupon/validate?code=' + encodeURIComponent(c)),
+    checkoutSession: (email, couponCode) => CFG.demo ? Promise.reject(Object.assign(new Error('demo'), { code: 'demo' })) : apiFetch('/checkout/session', { method: 'POST', body: JSON.stringify({ email, coupon_code: couponCode || '' }) }),
+    claimCheckout: (sessionId) => CFG.demo ? Promise.reject(Object.assign(new Error('demo'), { code: 'demo' })) : apiFetch('/checkout/claim', { method: 'POST', body: JSON.stringify({ session_id: sessionId }) }),
+    changePassword: (cur, next) => CFG.demo ? Promise.resolve({ ok: true }) : apiFetch('/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password: cur, new_password: next }) }),
     publicContent: () => CFG.demo ? Demo.publicContent() : apiFetch('/public-content'),
     progress: () => CFG.demo ? Demo.progress() : apiFetch('/progress'),
     completeLesson: (id) => CFG.demo ? Demo.completeLesson(id) : apiFetch('/progress/complete', { method: 'POST', body: JSON.stringify({ lesson_id: id }) }),
@@ -205,6 +215,11 @@
     adminUsers: () => CFG.demo ? Demo.adminUsers() : apiFetch('/admin/users'),
     adminEnroll: (id, on) => CFG.demo ? Demo.adminEnroll(id, on) : apiFetch(`/admin/users/${id}/${on ? 'enroll' : 'unenroll'}`, { method: 'POST' }),
     adminRole: (id, r) => CFG.demo ? Demo.adminRole(id, r) : apiFetch(`/admin/users/${id}/role`, { method: 'POST', body: JSON.stringify({ role: r }) }),
+    adminOrders: (params) => CFG.demo ? Promise.resolve([]) : apiFetch('/admin/orders?' + new URLSearchParams(params || {}).toString()),
+    adminOrderStats: () => CFG.demo ? Demo.adminOverview() : apiFetch('/admin/overview'),
+    adminAuditLog: (limit) => CFG.demo ? Promise.resolve([]) : apiFetch('/admin/audit-log?limit=' + (limit || 100)),
+    exportOrdersCsv: () => '/api/admin/orders/export',
+    exportUsersCsv: () => '/api/admin/users/export',
   };
 
   window.Store = Store;

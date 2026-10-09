@@ -33,6 +33,11 @@
         <button class="btn btn-primary" id="complete-btn">✓ تم إكمال الدرس</button>
         <a href="#" class="btn btn-ghost" id="next-btn">الدرس التالي ←</a>
       </div>
+      <div class="final-cta" id="guest-cta" style="display:none;margin-top:22px;padding:36px 24px">
+        <h3 style="margin-bottom:10px">🎁 عجبك الدرس المجاني؟</h3>
+        <p style="color:var(--muted);margin-bottom:20px">هذه مجرد البداية — احصل على الدورة الكاملة (10 Modules) بسعر الإطلاق.</p>
+        <a href="/#pricing" class="btn btn-primary btn-lg">احصل على الدورة الآن</a>
+      </div>
       <div class="notes-card">
         <h3>📝 ملاحظاتي</h3>
         <div class="field"><textarea id="notes" placeholder="دوّن ملاحظاتك حول هذا الدرس... (تُحفظ تلقائياً)"></textarea></div>
@@ -53,8 +58,13 @@
   let lesson;
   try { lesson = await Store.lesson(id); }
   catch (e) {
-    if (e.status === 401) { App.requireLoginRedirect(); return; }
-    document.getElementById('denied').style.display = 'block';
+    if (e.status === 401 || e.code === 'login_required') { App.requireLoginRedirect(); return; }
+    const d = document.getElementById('denied');
+    d.style.display = 'block';
+    if (e.code === 'lesson_locked') {
+      d.querySelector('h2').textContent = 'هذا الدرس مقفل حالياً';
+      d.querySelector('.sub').textContent = 'أكمل الدرس السابق أولاً لفتح هذا الدرس — التعلم بالترتيب يضمن استيعاباً أفضل.';
+    }
     return;
   }
   document.getElementById('lesson-view').style.display = 'grid';
@@ -65,6 +75,14 @@
   document.getElementById('lesson-meta').textContent =
     `${lesson.module ? lesson.module.title + ' · ' : ''}${lesson.duration ? '⏱ ' + lesson.duration + ' · ' : ''}${lesson.is_free_preview ? '🎁 معاينة مجانية' : ''}`;
   document.getElementById('lesson-desc').textContent = lesson.description || '';
+
+  // viewer state: guests see free preview without tracking/notes
+  let viewer = null;
+  try { viewer = await Store.me(); } catch {}
+  const canTrack = viewer && (viewer.enrolled || viewer.role === 'admin');
+  if (!canTrack) document.getElementById('complete-btn').style.display = 'none';
+  if (!viewer) document.querySelector('.notes-card').style.display = 'none';
+  if (!canTrack) document.getElementById('guest-cta').style.display = 'block';
 
   // sidebar + prev/next
   const mods = await Store.curriculum();

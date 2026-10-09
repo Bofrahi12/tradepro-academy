@@ -8,53 +8,46 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="">
 <meta property="og:description" content="">
-<meta property="og:image" content="">
+<meta property="og:image" content="https://bofrahi12.github.io/tradepro-academy-demo/images/og-image.jpg">
 <meta name="theme-color" content="#05070d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2300e5a0'/><text x='50' y='68' font-size='52' text-anchor='middle' font-family='sans-serif' font-weight='900' fill='%2304120c'>T</text></svg>">
+<link rel="icon" href="/images/logo.svg">
 <script src="/js/config.js"></script>
 <script src="/js/store.js"></script>
 <script src="/js/app.js"></script>
 </head>
 <body>
 
+<div class="announce">🚀 سعر الإطلاق: <b>$20</b> بدل <b>$97</b> — <a href="#pricing">احصل على الدورة الآن</a></div>
+
 <header class="site-header" id="site-header"></header>
 
-<!-- ============ HERO ============ -->
-<section class="hero">
-  <div class="container hero-grid">
-    <div>
-      <span class="eyebrow">🎓 دورة تداول عربية متكاملة</span>
-      <h1 data-s="HERO_TITLE">تعلّم التداول بطريقة منظمة واحترافية</h1>
-      <p class="sub" data-s="HERO_SUBTITLE"></p>
-      <div class="hero-cta">
-        <a href="#pricing" class="btn btn-primary btn-lg" data-s="CTA_TEXT">احصل على الدورة الآن</a>
-        <a href="/course" class="btn btn-ghost btn-lg">استعرض المنهج</a>
-      </div>
-      <div class="trust-line">✓ <span data-s="TRUST_LINE">تعلّم خطوة بخطوة من الأساسيات إلى بناء خطة تداول منظمة</span></div>
+<!-- ============ HERO (VSL) ============ -->
+<section class="hero" style="text-align:center;padding-top:64px">
+  <div class="container">
+    <span class="eyebrow">🎓 دورة تداول عربية متكاملة</span>
+    <h1 data-s="HERO_TITLE" style="max-width:22em;margin-inline:auto">تعلّم التداول بطريقة منظمة واحترافية</h1>
+    <p class="sub" data-s="HERO_SUBTITLE" style="margin-inline:auto"></p>
+    <div class="hero-video reveal">
+      <video controls preload="metadata" poster="videos/intro-poster.jpg" playsinline>
+        <source src="videos/intro.mp4" type="video/mp4">
+      </video>
     </div>
-    <div class="hero-visual reveal">
-      <div class="hero-card">
-        <div class="chart-mock">
-          <svg viewBox="0 0 400 220" preserveAspectRatio="none">
-            <path d="M0,170 C40,160 60,120 90,125 C120,130 130,90 160,95 C190,100 200,60 230,65 C260,70 270,40 300,45 C330,50 350,25 400,30"
-              fill="none" stroke="#00e5a0" stroke-width="3"/>
-            <path d="M0,170 C40,160 60,120 90,125 C120,130 130,90 160,95 C190,100 200,60 230,65 C260,70 270,40 300,45 C330,50 350,25 400,30 L400,220 L0,220 Z"
-              fill="url(#g1)" opacity=".25"/>
-            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#00e5a0"/><stop offset="1" stop-color="#00e5a0" stop-opacity="0"/>
-            </linearGradient></defs>
-          </svg>
-        </div>
-        <div class="stat-row">
-          <div><b>10</b><span>Modules منظمة</span></div>
-          <div><b>خطوة بخطوة</b><span>منهج متدرج</span></div>
-          <div><b>عملي</b><span>أمثلة من الشارت</span></div>
-        </div>
-      </div>
+    <div class="hero-cta" style="justify-content:center">
+      <a href="#pricing" class="btn btn-primary btn-lg" data-s="CTA_TEXT">احصل على الدورة الآن</a>
+      <a href="/course" class="btn btn-ghost btn-lg">استعرض المنهج</a>
+    </div>
+    <div style="margin-bottom:16px"><a href="#" id="free-preview-btn" class="btn btn-ghost" style="display:none;border-style:dashed">🎁 شاهد درساً مجانياً</a></div>
+    <div style="margin-bottom:16px;font-size:.92rem;color:var(--muted)">مشترك بالفعل؟ <a href="/login" style="color:var(--green);font-weight:700">ادخل لمنصتك ←</a></div>
+    <div class="trust-line" style="justify-content:center">✓ <span data-s="TRUST_LINE">تعلّم خطوة بخطوة من الأساسيات إلى بناء خطة تداول منظمة</span></div>
+    <div class="trust-badges" style="justify-content:center">
+      <span><b>✓</b> وصول مدى الحياة</span>
+      <span><b>✓</b> تحديثات مجانية</span>
+      <span><b>✓</b> من الهاتف أو الكمبيوتر</span>
+      <span><b>🛡️</b> ضمان استرداد <span class="gdays">7</span> أيام</span>
     </div>
   </div>
 </section>
@@ -99,8 +92,40 @@
   </div>
 </section>
 
-<!-- ============ WHAT YOU'LL LEARN ============ -->
-<section id="learn" style="padding-top:0">
+<!-- ============ STRATEGIES ============ -->
+<section id="strategies" style="padding-top:0">
+  <div class="container">
+    <h2 class="section-title reveal">استراتيجيات عملية ستتقنها</h2>
+    <p class="section-sub reveal">لمحات حقيقية من داخل الدورة — كل استراتيجية تُشرح خطوة بخطوة مع أمثلة على الشارت.</p>
+    <div class="strat-grid">
+      <div class="strat-card reveal">
+        <img src="images/strategies/chart-60sec.png" alt="قراءة الشارت" loading="lazy">
+        <div class="sbody"><h3>📊 قراءة أي شارت في 60 ثانية</h3><p>كيف تحدد اتجاه السوق بسرعة عبر القمم والقيعان (HH / HL) — أول مهارة عملية يتقنها الطالب.</p></div>
+      </div>
+      <div class="strat-card reveal">
+        <img src="images/strategies/trendline.png" alt="خط الاتجاه" loading="lazy">
+        <div class="sbody"><h3>📈 خط الاتجاه: متى تشتري ومتى تبيع</h3><p>رسم خط الاتجاه الصحيح واستخدامه لتحديد مناطق الدخول والخروج بانضباط، بدل التخمين العشوائي.</p></div>
+      </div>
+      <div class="strat-card reveal">
+        <img src="images/strategies/support-resistance.jpg" alt="الدعم والمقاومة" loading="lazy">
+        <div class="sbody"><h3>🧱 الدعم يتحول إلى مقاومة</h3><p>فهم المستويات الرئيسية (Key Levels) وكيف تتحول مناطق الدعم إلى مقاومة — أساس قراءة الشارت الاحترافية.</p></div>
+      </div>
+      <div class="strat-card reveal">
+        <img src="images/strategies/hammer.png" alt="شمعة الهامر" loading="lazy">
+        <div class="sbody"><h3>🔨 شمعة الهامر — Price Action</h3><p>أول دروس البرايس أكشن: كيف تقرأ شمعة الهامر وتفهم الرسالة التي تحملها حركة السعر.</p></div>
+      </div>
+      <div class="strat-card reveal">
+        <img src="images/strategies/order-blocks.png" alt="Order Blocks" loading="lazy">
+        <div class="sbody"><h3>🧊 الـ Order Blocks</h3><p>مفهوم متقدم: كيف تحدد مناطق السيولة التي تنطلق منها الحركات القوية — ضمن مستوى الدورة المتقدم.</p></div>
+      </div>
+      <div class="strat-card reveal" style="display:flex;align-items:center;justify-content:center;text-align:center">
+        <div class="sbody"><h3>🎓 + المزيد داخل الدورة</h3><p>10 Modules كاملة من الأساسيات إلى بناء خطة تداولك الخاصة.</p><a href="#pricing" class="btn btn-primary" style="margin-top:14px">احصل على الدورة</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT YOU'LL LEARN ============ --><section id="learn" style="padding-top:0">
   <div class="container">
     <h2 class="section-title reveal">ماذا ستتعلم؟</h2>
     <p class="section-sub reveal">مهارات عملية تخرج بها من الدورة.</p>
@@ -130,6 +155,32 @@
   </div>
 </section>
 
+<!-- ============ FOR WHOM ============ -->
+<section id="for-whom" style="padding-top:0">
+  <div class="container">
+    <h2 class="section-title reveal">هل هذه الدورة لك؟</h2>
+    <div class="grid grid-2">
+      <div class="glass reveal" style="border-color:rgba(0,229,160,.35)">
+        <h3 style="color:var(--green);margin-bottom:14px">✅ هذه الدورة لك إذا كنت…</h3>
+        <ul class="check-list">
+          <li>مبتدئاً وتريد تعلّم التداول بطريقة منظمة من الصفر</li>
+          <li>تتداول منذ مدة لكن بدون خطة ونتائجك عشوائية</li>
+          <li>مستعداً للالتزام والتعلّم خطوة بخطوة</li>
+          <li>تفهم أن التداول مهارة تُبنى بالانضباط وإدارة المخاطر</li>
+        </ul>
+      </div>
+      <div class="glass reveal problem">
+        <h3 style="color:#ff9a9a;margin-bottom:14px">⛔ ليست لك إذا كنت…</h3>
+        <ul class="cross-list">
+          <li>تبحث عن أرباح مضمونة أو "صفقة العمر"</li>
+          <li>تريد نتائج بين ليلة وضحاها دون تعلّم والتزام</li>
+          <li>غير مستعد لاحترام إدارة المخاطر</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ INSTRUCTOR ============ -->
 <section id="instructor" style="padding-top:0">
   <div class="container">
@@ -139,13 +190,27 @@
       <div id="instructor-photo-wrap"></div>
       <div>
         <h3 data-s="INSTRUCTOR_NAME">اسم المدرب</h3>
-        <div class="role">مدرب ومحلل أسواق مالية</div>
+        <div class="role">متداول محترف · 10 سنوات خبرة</div>
         <p data-s="INSTRUCTOR_BIO"></p>
         <ul>
           <li><b>الخبرة:</b> <span data-s="INSTRUCTOR_EXPERIENCE"></span></li>
           <li><b>أسلوب التعليم:</b> <span data-s="INSTRUCTOR_STYLE"></span></li>
         </ul>
       </div>
+    </div>
+    <div id="instructor-desk-wrap" class="reveal" style="margin-top:22px"></div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how" style="padding-top:0">
+  <div class="container">
+    <h2 class="section-title reveal">كيف تبدأ؟</h2>
+    <p class="section-sub reveal">ثلاث خطوات فقط تفصلك عن أول درس.</p>
+    <div class="steps">
+      <div class="step reveal"><div class="n">1</div><h3>احصل على الدورة</h3><p>اضغط زر الشراء وأتمم الدفع الآمن في أقل من دقيقتين.</p></div>
+      <div class="step reveal"><div class="n">2</div><h3>ادخل منصتك الخاصة</h3><p>تحصل فوراً على الوصول إلى بوابة الطالب بجميع الدروس والموارد.</p></div>
+      <div class="step reveal"><div class="n">3</div><h3>تعلّم خطوة بخطوة</h3><p>تابع الدروس بالترتيب، وطبّق على الشارت، وابنِ خطة تداولك.</p></div>
     </div>
   </div>
 </section>
@@ -155,11 +220,24 @@
   <div class="container">
     <h2 class="section-title reveal">احصل على الدورة الآن</h2>
     <p class="section-sub reveal">دفعة واحدة — وصول مدى الحياة مع التحديثات.</p>
+    <div class="guarantee-box reveal">
+      <div class="g-icon">🛡️</div>
+      <div><h3>ضمان استرداد كامل لمدة <span class="gdays">7</span> أيام</h3><p>إذا لم تعجبك الدورة لأي سبب خلال <span class="gdays">7</span> أيام من الشراء، نرد لك المبلغ كاملاً — بدون أسئلة.</p></div>
+    </div>
     <div class="pricing-wrap">
       <div class="pricing-card reveal">
-        <div class="limited">عرض محدود</div>
+        <div class="limited">عرض الإطلاق</div>
+        <h3 style="margin-bottom:14px">📦 كل ما ستحصل عليه</h3>
+        <ul class="value-stack">
+          <li><span class="tick">✓</span><div>المنهج الكامل: 10 Modules<small>من الأساسيات إلى بناء خطة تداولك الخاصة</small></div></li>
+          <li><span class="tick">✓</span><div>دروس فيديو منظمة خطوة بخطوة<small>شاهد من الهاتف أو الكمبيوتر، بالسرعة التي تناسبك</small></div></li>
+          <li><span class="tick">✓</span><div>ملفات وموارد عملية<small>Trading Plan جاهز + Checklists + ملفات Excel</small></div></li>
+          <li><span class="tick">✓</span><div>تحديثات مستقبلية مجانية<small>كل درس جديد يُضاف إلى حسابك تلقائياً</small></div></li>
+          <li><span class="tick">✓</span><div>وصول مدى الحياة<small>دفعة واحدة، بدون اشتراك شهري</small></div></li>
+        </ul>
         <div class="price-old" id="price-old"></div>
         <div class="price-now" id="price-now"></div>
+        <div><span class="save-line" id="save-line" style="display:none"></span></div>
         <p style="color:var(--muted);font-size:.9rem;margin:6px 0 4px">دفعة واحدة · وصول مدى الحياة</p>
         <ul class="bonus-list" id="bonus-list"></ul>
         <div class="coupon-row">
@@ -168,7 +246,7 @@
         </div>
         <div class="coupon-msg" id="coupon-msg"></div>
         <button class="btn btn-primary btn-lg btn-block" id="buy-btn">اشترِ الدورة الآن</button>
-        <p style="color:var(--muted);font-size:.82rem;margin-top:12px">🔒 دفع آمن · وصول فوري بعد إتمام الشراء</p>
+        <p style="color:var(--muted);font-size:.82rem;margin-top:12px">🔒 دفع آمن · وصول فوري بعد إتمام الشراء<br>🛡️ ضمان استرداد كامل لمدة <span class="gdays">7</span> أيام</p>
       </div>
     </div>
   </div>
@@ -190,6 +268,17 @@
   </div>
 </section>
 
+<!-- ============ CONTACT ============ -->
+<section id="contact" style="padding-top:0">
+  <div class="container">
+    <div class="final-cta reveal" style="padding:44px 28px">
+      <h2 style="margin-bottom:10px">💬 عندك سؤال قبل ما تشري؟</h2>
+      <p style="color:var(--muted);margin-bottom:24px">راسلنا على واتساب وسنجاوبك قبل أن تقرر.</p>
+      <a href="#" id="wa-btn" target="_blank" rel="noopener" class="btn btn-primary btn-lg">راسلنا على واتساب</a>
+    </div>
+  </div>
+</section>
+
 <!-- ============ FINAL CTA ============ -->
 <section style="padding-top:0">
   <div class="container">
@@ -206,10 +295,17 @@
 
 <footer class="site-footer">
   <div class="container">
-    <div class="logo" style="justify-content:center;margin-bottom:10px"><span class="logo-mark">T</span><span data-s="COURSE_NAME">TradePro Academy</span></div>
+    <div class="logo" style="justify-content:center;margin-bottom:10px"><img class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span data-s="COURSE_NAME">TradePro Academy</span></div>
     <p>© 2026 <span data-s="COURSE_NAME">TradePro Academy</span> — جميع الحقوق محفوظة.</p>
+    <p style="margin-top:10px"><a href="/privacy" style="color:var(--muted)">سياسة الخصوصية</a> · <a href="/terms" style="color:var(--muted)">شروط الاستخدام</a> · <a href="/refund" style="color:var(--muted)">سياسة الاسترداد</a> · <a href="/contact" style="color:var(--muted)">تواصل معنا</a></p>
   </div>
 </footer>
+
+<!-- sticky mobile CTA -->
+<div class="sticky-cta on" id="sticky-cta">
+  <div class="p"><small id="sticky-old"></small><span id="sticky-now"></span></div>
+  <a href="#pricing" class="btn btn-primary btn-sm" style="padding:12px 26px">احصل على الدورة</a>
+</div>
 
 <script>
 (async function () {
@@ -218,15 +314,70 @@
     document.querySelector('meta[property="og:title"]').setAttribute('content', st.SEO_TITLE || '');
     document.querySelector('meta[property="og:description"]').setAttribute('content', st.META_DESCRIPTION || '');
     if (st.LOGO_URL) document.querySelector('meta[property="og:image"]').setAttribute('content', st.LOGO_URL);
+    if (st.UMAMI_WEBSITE_ID && !document.querySelector('script[data-umami]')) {
+      const sc = document.createElement('script');
+      sc.defer = true; sc.setAttribute('data-umami', '1');
+      sc.src = 'https://cloud.umami.is/script.js';
+      sc.setAttribute('data-website-id', st.UMAMI_WEBSITE_ID);
+      document.head.appendChild(sc);
+    }
     // instructor photo
     const w = document.getElementById('instructor-photo-wrap');
     w.innerHTML = st.INSTRUCTOR_IMAGE
       ? `<img class="instructor-photo" src="${App.esc(st.INSTRUCTOR_IMAGE)}" alt="${App.esc(st.INSTRUCTOR_NAME)}">`
       : `<div class="instructor-photo ph">👨‍🏫</div>`;
+    const dw = document.getElementById('instructor-desk-wrap');
+    if (dw) dw.innerHTML = st.INSTRUCTOR_IMAGE_2
+      ? `<img src="${App.esc(st.INSTRUCTOR_IMAGE_2)}" alt="${App.esc(st.INSTRUCTOR_NAME)} أثناء التداول" loading="lazy" style="width:100%;border-radius:20px;border:1px solid var(--card-border)">`
+      : '';
     // pricing
     document.getElementById('price-old').textContent = App.fmtPrice(st, 'ORIGINAL_PRICE');
     document.getElementById('price-now').textContent = App.fmtPrice(st, 'COURSE_PRICE');
+    document.getElementById('sticky-old').textContent = App.fmtPrice(st, 'ORIGINAL_PRICE');
+    document.getElementById('sticky-now').textContent = App.fmtPrice(st, 'COURSE_PRICE');
+    const oldP = parseFloat(st.ORIGINAL_PRICE), nowP = parseFloat(st.COURSE_PRICE), cur = st.CURRENCY || '$';
+    if (oldP > nowP && nowP > 0) {
+      const save = Math.round(oldP - nowP), pct = Math.round((save / oldP) * 100);
+      const sl = document.getElementById('save-line');
+      sl.textContent = `وفّر ${save} ${cur} (${pct}%)`;
+      sl.style.display = 'inline-block';
+    }
+    // WhatsApp support link — proper E.164 handling (no country assumption)
+    const waRaw = String(st.SUPPORT_WHATSAPP || '').replace(/[()\s-]/g, '');
+    let waNum = '';
+    if (waRaw) {
+      if (waRaw.startsWith('+')) waNum = waRaw.slice(1).replace(/\D/g, '');
+      else if (waRaw.startsWith('00')) waNum = waRaw.slice(2).replace(/\D/g, '');
+      else {
+        const cc = String(st.SUPPORT_WHATSAPP_COUNTRY_CODE || '').replace(/\D/g, '');
+        waNum = (waRaw.startsWith('0') && cc) ? cc + waRaw.slice(1).replace(/\D/g, '') : waRaw.replace(/\D/g, '');
+      }
+    }
+    if (waNum) {
+      document.getElementById('wa-btn').href = 'https://wa.me/' + waNum + '?text=' + encodeURIComponent('مرحباً، عندي سؤال حول دورة ' + (st.COURSE_NAME || ''));
+    } else {
+      document.getElementById('contact').style.display = 'none';
+    }
+    // Guarantee days from settings (editable in admin)
+    const gdays = parseInt(st.GUARANTEE_DAYS, 10);
+    if (Number.isInteger(gdays) && gdays >= 0) {
+      document.querySelectorAll('.gdays').forEach((el) => { el.textContent = gdays; });
+    }
   });
+
+  // sticky mobile CTA: show after hero, hide near pricing
+  const sticky = document.getElementById('sticky-cta');
+  const pricing = document.getElementById('pricing');
+  const onScroll = () => {
+    const past = window.scrollY > 500;
+    const nearPricing = pricing.getBoundingClientRect().top < window.innerHeight * 0.7 &&
+                        pricing.getBoundingClientRect().bottom > 0;
+    const show = past && !nearPricing;
+    sticky.classList.toggle('show', show);
+    document.body.classList.toggle('has-sticky', show);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
   // curriculum accordion
   try {
@@ -240,6 +391,13 @@
         </div></div>
       </div>`).join('');
     App.courseSchema(s, mods);
+    // free preview button -> first free-preview lesson WITH a video
+    const fp = mods.flatMap((m) => m.lessons).find((l) => l.is_free_preview && l.has_video);
+    if (fp) {
+      const b = document.getElementById('free-preview-btn');
+      b.style.display = '';
+      b.href = '/lesson/' + fp.id;
+    }
   } catch (e) { /* ignore */ }
 
   // bonuses + FAQ (public content)
@@ -258,43 +416,48 @@
     }
   } catch (e) {}
 
-  // testimonials (only real ones added from admin — never fabricated)
+  // testimonials — hidden by default; shown only when explicitly enabled in admin (SHOW_TESTIMONIALS=1) with real entries
   try {
     const list = (await Store.publicContent()).testimonials || [];
-    const w = document.getElementById('testi-wrap');
-    if (list && list.length) {
+    const st2 = await Store.settings();
+    const show = st2.SHOW_TESTIMONIALS === '1' && list.length > 0;
+    document.getElementById('testimonials').style.display = show ? '' : 'none';
+    if (show) {
+      const w = document.getElementById('testi-wrap');
       w.innerHTML = `<div class="testi-grid">` + list.map((t) => `
         <div class="glass testi reveal"><div class="stars">★★★★★</div>
         <p>"${App.esc(t.text)}"</p><footer><b>${App.esc(t.name)}</b>${t.role ? ` · ${App.esc(t.role)}` : ''}</footer></div>`).join('') + `</div>`;
-    } else {
-      w.innerHTML = `<div class="empty-note">⭐ آراء الطلاب الحقيقية ستظهر هنا بعد إضافتها من لوحة الإدارة.</div>`;
     }
-  } catch (e) {}
+  } catch (e) { document.getElementById('testimonials').style.display = 'none'; } catch (e) {}
 
-  // coupon + buy
-  let discount = 0;
+  // coupon + buy (server is the single source of truth for pricing)
+  let appliedCoupon = '';
   document.getElementById('coupon-btn').onclick = async () => {
     const code = document.getElementById('coupon-input').value.trim();
     const msg = document.getElementById('coupon-msg');
     if (!code) return;
     try {
       const c = await Store.coupon(code);
-      discount = c.percent_off;
-      const st = await Store.settings();
-      const now = Math.round(parseFloat(st.COURSE_PRICE) * (1 - discount / 100));
-      document.getElementById('price-now').textContent = `${now} ${st.CURRENCY || '$'}`;
+      appliedCoupon = c.code;
+      document.getElementById('price-now').textContent = `${c.final} ${c.display || '$'}`;
       msg.className = 'coupon-msg ok';
-      msg.textContent = `تم تطبيق خصم ${discount}% ✓`;
+      msg.textContent = `تم تطبيق خصم ${c.percent_off}% ✓ (وفّرت ${c.discount} ${c.display || '$'})`;
     } catch {
+      appliedCoupon = '';
       msg.className = 'coupon-msg err';
       msg.textContent = 'كود الخصم غير صالح';
     }
   };
   document.getElementById('buy-btn').onclick = async () => {
     const st = await Store.settings();
-    if (st.PAYMENT_URL && !Store.demo) {
-      const sep = st.PAYMENT_URL.includes('?') ? '&' : '?';
-      location.href = discount ? st.PAYMENT_URL + sep + 'coupon_applied=' + discount : st.PAYMENT_URL;
+    const cfg = window.APP_CONFIG || {};
+    // Unified secure checkout: the server creates the Stripe session (price + coupon verified server-side).
+    if (cfg.stripe && !cfg.demo) {
+      location.href = '/offer' + (appliedCoupon ? '?coupon=' + encodeURIComponent(appliedCoupon) : '');
+      return;
+    }
+    if (st.PAYMENT_URL && !cfg.demo) {
+      location.href = st.PAYMENT_URL;
       return;
     }
     // demo / no payment URL yet: simulate enrollment
@@ -308,6 +471,8 @@
   };
 
   App.initReveal(); App.initAccordion();
+  // consent-aware analytics (GA4 / Meta Pixel only after consent)
+  try { App.initConsentAnalytics(window.APP_CONFIG || {}); } catch {}
 })();
 </script>
 </body>

@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تم تأكيد طلبك</title><link rel="stylesheet" href="/css/style.css"><script src="/js/config.js"></script><script src="/js/store.js"></script><script src="/js/app.js"></script></head>
-<body><header class="site-header" id="site-header"></header><main class="container" style="min-height:70vh;display:grid;place-items:center;padding:50px 0"><section class="form-card" style="max-width:620px;text-align:center"><div id="status-icon" style="font-size:3.5rem">⏳</div><h1 id="status-title">جارٍ تأكيد الدفع...</h1><p class="sub" id="status-text">نحن نتحقق من العملية ونجهز وصولك للمحتوى.</p><div id="actions" style="display:none;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn btn-primary" href="/student">دخول إلى الدورة</a><a class="btn btn-ghost" href="/podcast">فتح Podcast</a></div></section></main><script>
-(async function(){await App.renderHeader();const params=new URLSearchParams(location.search);const sid=params.get('session_id');const icon=document.getElementById('status-icon'),title=document.getElementById('status-title'),text=document.getElementById('status-text'),actions=document.getElementById('actions');if(!sid){icon.textContent='⚠️';title.textContent='الرابط غير مكتمل';text.textContent='ارجع إلى صفحة العرض أو تواصل معنا للمساعدة.';return}let done=false;for(let i=0;i<5&&!done;i++){try{const r=await fetch('/api/checkout/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid})});const d=await r.json();if(r.ok&&d.ok){done=true;icon.textContent='✅';title.textContent='تم تأكيد طلبك';text.textContent='تم تفعيل وصولك. يمكنك البدء الآن.';actions.style.display='flex';break}if(d.error==='payment_not_confirmed'){await new Promise(x=>setTimeout(x,2000));continue}throw new Error('claim_failed')}catch{await new Promise(x=>setTimeout(x,1500))}}if(!done){icon.textContent='🕒';title.textContent='الدفع قيد المراجعة';text.textContent='توصلنا إلى صفحة الدفع، لكن التأكيد لم يصل بعد. انتظر قليلاً ثم أعد تحميل الصفحة.'}})();
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>حالة الدفع</title><link rel="stylesheet" href="/css/style.css"><script src="/js/config.js"></script><script src="/js/store.js"></script><script src="/js/app.js"></script></head>
+<body><header class="site-header" id="site-header"></header><main class="container" style="min-height:70vh;display:grid;place-items:center;padding:50px 0"><section class="form-card" style="max-width:620px;text-align:center"><div id="status-icon" style="font-size:3.5rem">⏳</div><h1 id="status-title">جارٍ تأكيد الدفع...</h1><p class="sub" id="status-text">نحن نتحقق من العملية مباشرة مع بوابة الدفع.</p><div id="actions" style="display:none;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn btn-primary" href="/student">دخول إلى الدورة</a></div><div id="retry-wrap" style="display:none;margin-top:18px"><a class="btn btn-ghost" href="/offer">العودة إلى صفحة العرض</a></div></section></main><script>
+(async function(){
+  await App.renderHeader();
+  const params=new URLSearchParams(location.search);
+  const sid=params.get('session_id');
+  const icon=document.getElementById('status-icon'),title=document.getElementById('status-title'),
+        text=document.getElementById('status-text'),actions=document.getElementById('actions'),
+        retry=document.getElementById('retry-wrap');
+  const show=(ic,t,tx,showActions,showRetry)=>{icon.textContent=ic;title.textContent=t;text.textContent=tx;actions.style.display=showActions?'flex':'none';retry.style.display=showRetry?'block':'none';};
+  if(!sid){show('⚠️','الرابط غير مكتمل','ارجع إلى صفحة العرض أو تواصل معنا للمساعدة.',false,true);return;}
+  if(params.get('checkout')==='cancelled'){show('↩️','تم إلغاء الدفع','لم يتم خصم أي مبلغ. يمكنك المحاولة مجدداً متى شئت.',false,true);return;}
+  // Poll the server — the server verifies directly with Stripe. Never trust the URL alone.
+  let settled=false;
+  for(let i=0;i<8&&!settled;i++){
+    try{
+      const d=await Store.claimCheckout(sid);
+      if(d.status==='paid'){settled=true;show('✅','تم تأكيد الدفع','تم تفعيل وصولك للدورة. يمكنك البدء الآن.',true,false);}
+      else if(d.status==='pending'){await new Promise(x=>setTimeout(x,2500));continue;}
+      else if(d.status==='cancelled'){settled=true;show('↩️','تم إلغاء الدفع','انتهت صلاحية جلسة الدفع دون إتمام. لم يتم خصم أي مبلغ.',false,true);}
+      else{settled=true;show('❌','تعذّر إتمام الدفع','لم يتم خصم أي مبلغ. حاول مجدداً أو تواصل معنا.',false,true);}
+    }catch(e){await new Promise(x=>setTimeout(x,2000));}
+  }
+  if(!settled) show('🕒','الدفع قيد المراجعة','التأكيد لم يصل بعد من بوابة الدفع. انتظر قليلاً ثم أعد تحميل الصفحة — أو تحقق من بريدك.',false,false);
+})();
 </script></body></html>
