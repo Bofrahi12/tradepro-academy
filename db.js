@@ -290,18 +290,29 @@ const MIGRATIONS = [
     name: 'show only 8 video lessons',
     run() {
       const lessons = db.prepare(
-        'SELECT l.id, l.provider FROM lessons l JOIN modules m ON m.id = l.module_id ORDER BY m.sort_order, l.sort_order'
+        'SELECT l.id FROM lessons l JOIN modules m ON m.id = l.module_id ORDER BY m.sort_order, l.sort_order'
       ).all();
-      let visibleCount = 0;
-      lessons.forEach((l) => {
-        // Show only MP4 lessons (hide YouTube and lessons beyond 8)
-        const show = l.provider === 'mp4' && visibleCount < 8;
-        if (show) visibleCount++;
-        db.prepare('UPDATE lessons SET is_visible = ? WHERE id = ?').run(show ? 1 : 0, l.id);
+      lessons.forEach((l, idx) => {
+        db.prepare('UPDATE lessons SET is_visible = ? WHERE id = ?').run(idx < 8 ? 1 : 0, l.id);
       });
       const mods = db.prepare('SELECT id FROM modules ORDER BY sort_order').all();
       mods.forEach((m, idx) => {
         db.prepare('UPDATE modules SET is_visible = ? WHERE id = ?').run(idx < 3 ? 1 : 0, m.id);
+      });
+    },
+  },
+  {
+    v: 11,
+    name: 'hide YouTube lessons, MP4 only',
+    run() {
+      // Hide all non-MP4 lessons (YouTube links removed per owner request)
+      db.prepare("UPDATE lessons SET is_visible = 0 WHERE provider != 'mp4' OR provider IS NULL").run();
+      // Ensure MP4 lessons in first 3 modules stay visible
+      const mp4 = db.prepare(
+        "SELECT l.id FROM lessons l JOIN modules m ON m.id = l.module_id WHERE l.provider = 'mp4' AND m.sort_order < 3 ORDER BY m.sort_order, l.sort_order"
+      ).all();
+      mp4.forEach((l) => {
+        db.prepare('UPDATE lessons SET is_visible = 1 WHERE id = ?').run(l.id);
       });
     },
   },
