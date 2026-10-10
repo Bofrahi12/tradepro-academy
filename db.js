@@ -290,10 +290,14 @@ const MIGRATIONS = [
     name: 'show only 8 video lessons',
     run() {
       const lessons = db.prepare(
-        'SELECT l.id FROM lessons l JOIN modules m ON m.id = l.module_id ORDER BY m.sort_order, l.sort_order'
+        'SELECT l.id, l.provider FROM lessons l JOIN modules m ON m.id = l.module_id ORDER BY m.sort_order, l.sort_order'
       ).all();
-      lessons.forEach((l, idx) => {
-        db.prepare('UPDATE lessons SET is_visible = ? WHERE id = ?').run(idx < 8 ? 1 : 0, l.id);
+      let visibleCount = 0;
+      lessons.forEach((l) => {
+        // Show only MP4 lessons (hide YouTube and lessons beyond 8)
+        const show = l.provider === 'mp4' && visibleCount < 8;
+        if (show) visibleCount++;
+        db.prepare('UPDATE lessons SET is_visible = ? WHERE id = ?').run(show ? 1 : 0, l.id);
       });
       const mods = db.prepare('SELECT id FROM modules ORDER BY sort_order').all();
       mods.forEach((m, idx) => {
