@@ -466,9 +466,7 @@ try {
     db.prepare("UPDATE modules SET title = 'قراءة الشارت', description = 'أساسيات قراءة الشموع والأطر الزمنية والدعوم والمقاومات', sort_order = 0 WHERE id = ?").run(mod1.id);
     // Module 2: Price Action (lessons 7,8)
     db.prepare("UPDATE modules SET title = 'Price Action متقدم', description = 'مفاهيم BoS و ChoCh والأوردر بلوك', sort_order = 1 WHERE id = ?").run(mod3.id);
-    // Delete old module 1 (أساسيات التداول)
-    db.prepare("DELETE FROM modules WHERE title LIKE '%أساسيات التداول%'").run();
-    // Fix lesson titles to match videos + correct order
+    // Fix lesson titles to match videos + correct order (BEFORE deleting old module)
     const fixes = [
       [1, 'مقدمة: شمعة Hammer و Doji', mod1.id, 0],
       [4, 'الشموع اليابانية: القراءة الصحيحة', mod1.id, 1],
@@ -479,6 +477,14 @@ try {
     ];
     for (const [lid, title, mid, sort] of fixes) {
       db.prepare("UPDATE lessons SET title = ?, module_id = ?, sort_order = ? WHERE id = ?").run(title, mid, sort, lid);
+    }
+    // Now safe to delete old module (lesson 1 already moved)
+    db.prepare("DELETE FROM modules WHERE title LIKE '%أساسيات التداول%'").run();
+    // Restore lesson 1 if it was orphaned (safety)
+    const l1 = db.prepare("SELECT id FROM lessons WHERE id = 1").get();
+    if (!l1) {
+      db.prepare("INSERT INTO lessons (id, module_id, title, sort_order, is_visible, provider, video_url, is_free_preview) VALUES (1, ?, 'مقدمة: شمعة Hammer و Doji', 0, 1, 'mp4', '/videos/lesson-04-hammer-doji.mp4', 1)").run(mod1.id);
+      console.log('[db] lesson 1 restored');
     }
     console.log('[db] curriculum restructured: 2 modules, 6 lessons');
   }
