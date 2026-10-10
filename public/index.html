@@ -38,7 +38,12 @@
 .cd-box span{font-size:1.4rem;font-weight:800;color:#ff6b6b;font-variant-numeric:tabular-nums}
 .cd-box small{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
 </style>
-</head>
+<style>
+.hero-stats{display:flex;gap:24px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.hstat{text-align:center}
+.hstat b{font-size:1.5rem;font-weight:800;color:var(--gold,#f5c518);display:block}
+.hstat span{color:var(--muted);font-size:.85rem}
+</style></head>
 <body>
 
 <div class="announce">🚀 سعر الإطلاق: <b>$20</b> بدل <b>$97</b> — <a href="#pricing">احصل على الدورة الآن</a></div>
@@ -68,6 +73,11 @@
       <span><b>✓</b> تحديثات مجانية</span>
       <span><b>✓</b> من الهاتف أو الكمبيوتر</span>
       <span><b>🛡️</b> ضمان استرداد <span class="gdays">7</span> أيام</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><b id="stat-lessons">6</b><span>دروس فيديو</span></div>
+      <div class="hstat"><b>∞</b><span>وصول مدى الحياة</span></div>
+      <div class="hstat"><b id="stat-students">—</b><span>طالب مسجّل</span></div>
     </div>
   </div>
 </section>
@@ -528,5 +538,12 @@
   tick();setInterval(tick,1000);
 })();
 </script>
-</body>
+<script>
+(function(){
+  fetch('/api/stats').then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById('stat-students');
+    if(el&&typeof d.students!=='undefined'){el.textContent=d.students;}
+  }).catch(function(){});
+})();
+</script></body>
 </html>
