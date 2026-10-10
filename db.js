@@ -365,6 +365,11 @@ seed();
         .run(bcrypt.hashSync(superPass, 12), sa.id);
       console.log(`[db] super_admin password set for ${sa.email}`);
     }
+    // One-time fix: clear must_change_password for super_admins that already
+    // got their password via SUPER_ADMIN_PASSWORD on a previous boot
+    db.prepare(
+      "UPDATE users SET must_change_password = 0 WHERE role = 'super_admin' AND must_change_password = 1 AND password_hash NOT LIKE '$2b$12$UNUSABLE_PLACEHOLDER%'"
+    ).run();
   } catch (e) {
     console.error('[db] super_admin password sync failed:', e.message);
   }
