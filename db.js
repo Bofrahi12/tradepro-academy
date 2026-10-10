@@ -502,6 +502,7 @@ try {
 }
 // Lesson thumbnails, wired by lesson order (only if empty).
   const thumbs = {
+    1: '/images/thumbnails/lesson-01-hammer.jpg',
     4: '/images/thumbnails/hammer-candle.png',
     5: '/images/thumbnails/lesson-05-timeframes.jpg',
     6: '/images/thumbnails/lesson-06-support-resistance.jpg',
