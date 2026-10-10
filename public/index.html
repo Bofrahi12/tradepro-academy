@@ -248,7 +248,46 @@ section{padding:64px 0!important}
   <div class="container">
     <h2 class="section-title reveal">المنهج الكامل: 6 دروس فيديو</h2>
     <p class="section-sub reveal">منهج متدرج من الصفر حتى بناء خطة تداولك الخاصة.</p>
-    <div class="accordion" id="curriculum-acc"></div>
+<div class="lesson-cards">
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/lesson-01-hammer.jpg" alt="مقدمة: شمعة Hammer و Doji" loading="lazy"><span class="lnum">1</span><span class="lbadge free">مجاني</span></div>
+    <div class="lcard-body"><h3>مقدمة: شمعة Hammer و Doji</h3><p>تعرف على أقوى شموع الانعكاس</p></div>
+  </a>
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/hammer-candle.png" alt="الشموع اليابانية" loading="lazy"><span class="lnum">2</span><span class="lbadge">مدفوع</span></div>
+    <div class="lcard-body"><h3>الشموع اليابانية: القراءة الصحيحة</h3><p>اقرأ الشموع كالمحترفين</p></div>
+  </a>
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/lesson-05-timeframes.jpg" alt="الأطر الزمنية" loading="lazy"><span class="lnum">3</span><span class="lbadge">مدفوع</span></div>
+    <div class="lcard-body"><h3>الأطر الزمنية: اختر المناسب لك</h3><p>الفريم المناسب لأسلوبك</p></div>
+  </a>
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/lesson-06-support-resistance.jpg" alt="الدعوم والمقاومات" loading="lazy"><span class="lnum">4</span><span class="lbadge">مدفوع</span></div>
+    <div class="lcard-body"><h3>الدعوم والمقاومات وخطوط الاتجاه</h3><p>حدد مناطق الدخول بدقة</p></div>
+  </a>
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/lesson-07-bos-choch.jpg" alt="BoS و ChoCh" loading="lazy"><span class="lnum">5</span><span class="lbadge">مدفوع</span></div>
+    <div class="lcard-body"><h3>BoS و ChoCh: كسر الهيكل</h3><p>استراتيجية Price Action متقدمة</p></div>
+  </a>
+  <a href="/course" class="lcard reveal">
+    <div class="lcard-img"><img src="/images/thumbnails/lesson-08-orderblock.jpg" alt="الأوردر بلوك" loading="lazy"><span class="lnum">6</span><span class="lbadge">مدفوع</span></div>
+    <div class="lcard-body"><h3>الأوردر بلوك (Order Block)</h3><p>مناطق صناع السوق السرية</p></div>
+  </a>
+</div>
+<style>
+.lesson-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:28px}
+.lcard{background:var(--card);border:1px solid var(--card-border);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .3s,box-shadow .3s;display:block}
+.lcard:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,.4);border-color:rgba(245,197,24,.4)}
+.lcard-img{position:relative;aspect-ratio:16/9;overflow:hidden}
+.lcard-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.lcard:hover .lcard-img img{transform:scale(1.05)}
+.lnum{position:absolute;top:12px;right:12px;background:var(--gold,#f5c518);color:#0a0f1e;font-weight:800;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.lbadge{position:absolute;bottom:12px;right:12px;background:rgba(10,15,30,.85);border:1px solid rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700}
+.lbadge.free{background:rgba(0,229,160,.9);color:#0a0f1e;border:none}
+.lcard-body{padding:18px}
+.lcard-body h3{font-size:1.05rem;margin:0 0 8px;color:#fff}
+.lcard-body p{color:var(--muted);font-size:.88rem;margin:0}
+</style>
     <div style="text-align:center;margin-top:30px"><a href="/course" class="btn btn-ghost">عرض تفاصيل المنهج ←</a></div>
   </div>
 </section>
