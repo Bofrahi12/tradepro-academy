@@ -302,6 +302,13 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 12,
+    name: 'guarantee 14 days',
+    run() {
+      db.prepare("UPDATE settings SET value = '14' WHERE key = 'GUARANTEE_DAYS'").run();
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
