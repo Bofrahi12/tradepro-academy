@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دخول المدير | {{SEO_TITLE}}</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script src="/js/config.js"></script><script src="/js/store.js"></script><script src="/js/app.js"></script>
+<style>
+.admin-login-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:var(--green);border-radius:999px;padding:6px 16px;font-size:.82rem;font-weight:700;margin-bottom:14px}
+.remember-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.88rem;color:var(--muted)}
+.remember-row input{width:18px;height:18px;accent-color:var(--green)}
+</style>
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+<div class="container"><div class="auth-wrap"><div class="form-card">
+  <div class="admin-login-badge">🔐 منطقة الإدارة</div>
+  <h2>دخول المدير</h2>
+  <p class="sub">لوحة تحكم <span data-s="COURSE_NAME">TradePro Academy</span></p>
+  <div class="form-err" id="err"></div>
+  <form id="f">
+    <div class="field"><label for="email">البريد الإلكتروني</label><input type="email" id="email" required dir="ltr" style="text-align:left" autocomplete="email"></div>
+    <div class="field"><label for="password">كلمة المرور</label><div class="pass-wrap"><input type="password" id="password" required dir="ltr" style="text-align:left" autocomplete="current-password"><button type="button" class="pass-toggle" id="pass-toggle" aria-label="إظهار كلمة المرور">👁️</button></div></div>
+    <div class="remember-row"><input type="checkbox" id="remember" checked><label for="remember">تذكرني على هذا الجهاز</label></div>
+    <button class="btn btn-primary btn-block" type="submit" id="submit-btn">دخول لوحة التحكم</button>
+  </form>
+  <div class="form-link"><a href="/forgot">نسيت كلمة المرور؟</a></div>
+  <div class="form-link"><a href="/">← العودة للموقع</a></div>
+</div></div></div>
+<script>
+(async function () {
+  await App.renderHeader(); await App.applySettings();
+  App.initPasswordToggle('password', 'pass-toggle');
+  // If already logged in as admin, go straight to dashboard
+  try {
+    const me = await Store.me();
+    if (me && (me.role === 'admin' || me.role === 'super_admin')) { location.href = '/admin'; return; }
+  } catch {}
+  const form = document.getElementById('f');
+  const btn = document.getElementById('submit-btn');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (btn.disabled) return;
+    const err = document.getElementById('err'); err.style.display = 'none';
+    App.btnLoading(btn, true, 'جارٍ التحقق...');
+    try {
+      const remember = document.getElementById('remember').checked;
+      const u = await Store.adminLogin(
+        document.getElementById('email').value.trim(),
+        document.getElementById('password').value,
+        remember
+      );
+      if (u.role === 'admin' || u.role === 'super_admin') {
+        location.href = '/admin';
+      } else {
+        await Store.logout();
+        throw { code: 'not_admin' };
+      }
+    } catch (er) {
+      App.btnLoading(btn, false);
+      err.textContent = er.code === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة.'
+        : er.code === 'not_admin' ? 'هذا الحساب ليس لديه صلاحيات إدارية.'
+        : er.code === 'rate_limited' ? 'محاولات كثيرة، حاول بعد قليل.'
+        : 'حدث خطأ، حاول مجدداً.';
+      err.style.display = 'block';
+      err.setAttribute('role', 'alert');
+    }
+  };
+})();
+</script>
+</body>
+</html>
