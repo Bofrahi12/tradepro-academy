@@ -590,7 +590,7 @@ function forcePasswordChangeModal() {
   await App.renderHeader();
   let user;
   try { user = await Store.me(); } catch {}
-  if (!user || user.role !== 'admin') { location.href = '/login?next=/admin'; return; }
+  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) { location.href = '/admin/login'; return; }
   await App.applySettings();
   try { await Store.adminOverview(); }
   catch (e) {
