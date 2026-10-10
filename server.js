@@ -1035,6 +1035,12 @@ app.use('/videos/:file', (req, res, next) => {
   const file = String(req.params.file || '');
   if (file === 'intro.mp4' || file === 'intro-poster.jpg') return next();
   if (!file.toLowerCase().endsWith('.mp4')) return next();
+  // Admins and enrolled students may use direct URLs (e.g. admin previews);
+  // everyone else must go through signed /api/media/lesson/:id URLs.
+  try {
+    const u = me(req);
+    if (u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled)) return next();
+  } catch (e) { /* fall through to 403 */ }
   return res.status(403).json({ error: 'enrollment_required' });
 });
 
