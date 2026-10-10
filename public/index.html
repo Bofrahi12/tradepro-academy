@@ -69,6 +69,29 @@
 .ba-card li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.92rem}
 .ba-card.bad li::before{content:'❌ ';color:#ff6b6b}
 .ba-card.good li::before{content:'✅ ';color:#00e5a0}
+</style><style>
+.bonus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px}
+.bonus-card{background:linear-gradient(135deg,rgba(245,197,24,.08),rgba(245,197,24,.02));border:1px solid rgba(245,197,24,.25);border-radius:16px;padding:24px;text-align:center;transition:transform .3s,box-shadow .3s}
+.bonus-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(245,197,24,.15)}
+.bonus-icon{font-size:2.5rem;margin-bottom:12px}
+.bonus-card h3{margin-bottom:8px;font-size:1.05rem}
+.bonus-card p{color:var(--muted);font-size:.88rem;margin-bottom:12px}
+.bonus-price s{color:var(--muted);font-size:.85rem}
+.bonus-price b{color:#00e5a0;font-size:1.1rem;margin-right:6px}
+.bonus-total{text-align:center;margin-top:24px;padding:20px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:14px}
+.bonus-total s{color:var(--muted)}
+.bonus-today{display:block;margin-top:8px;font-size:1.2rem}
+.bonus-today b{color:var(--gold);font-size:1.8rem}
+/* premium upgrades */
+.section-title{position:relative;padding-bottom:12px}
+.section-title::after{content:'';position:absolute;bottom:0;right:50%;transform:translateX(50%);width:60px;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:2px}
+.pricing-card{position:relative;overflow:hidden}
+.pricing-card::before{content:'';position:absolute;top:0;right:0;left:0;height:4px;background:linear-gradient(90deg,#f5c518,#00e5a0,#f5c518);background-size:200% 100%;animation:shimmer 3s linear infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.btn-primary{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,197,24,.35)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.reveal.visible{opacity:1;transform:none}
 </style></head>
 <body>
 
@@ -298,6 +321,43 @@
           <li>منهج منظم خطوة بخطوة</li>
         </ul>
       </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title reveal">🎁 هدايا مجانية مع الدورة</h2>
+    <p class="section-sub reveal">قيمة إجمالية <b style="color:var(--gold)">$127</b> — تحصل عليها مجاناً اليوم</p>
+    <div class="bonus-grid">
+      <div class="bonus-card reveal">
+        <div class="bonus-icon">📊</div>
+        <h3>ملف Excel لإدارة رأس المال</h3>
+        <p>احسب حجم الصفقة ووقف الخسارة تلقائياً</p>
+        <div class="bonus-price"><s>$37</s> <b>مجاناً</b></div>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-icon">✅</div>
+        <h3>Checklist الدخول للصفقة</h3>
+        <p>قائمة تحقق قبل كل صفقة لتتجنب الأخطاء</p>
+        <div class="bonus-price"><s>$27</s> <b>مجاناً</b></div>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-icon">📝</div>
+        <h3>قالب Trading Plan جاهز</h3>
+        <p>خطة تداول كاملة قابلة للتخصيص</p>
+        <div class="bonus-price"><s>$33</s> <b>مجاناً</b></div>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-icon">👥</div>
+        <h3>مجتمع الطلاب الخاص</h3>
+        <p>جروب WhatsApp للأسئلة والنقاش مع الطلاب</p>
+        <div class="bonus-price"><s>$30</s> <b>مجاناً</b></div>
+      </div>
+    </div>
+    <div class="bonus-total reveal">
+      <span>القيمة الإجمالية: <s>$97 + $127</s></span>
+      <span class="bonus-today">اليوم فقط: <b>$20</b></span>
     </div>
   </div>
 </section>
@@ -652,6 +712,13 @@
   }
   setTimeout(showNotif,8000);
   setInterval(showNotif,25000);
+})();
+</script><script>
+(function(){
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}
+  });},{threshold:0.12});
+  document.querySelectorAll('.reveal:not(.visible)').forEach(function(el){io.observe(el);});
 })();
 </script></body>
 </html>
