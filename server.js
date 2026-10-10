@@ -282,6 +282,12 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), (req
   }
 });
 
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 app.use(express.json({ limit: '2mb' }));
 app.use(csrfProtect);
 
@@ -999,7 +1005,11 @@ app.get('/seed.json', (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`[tradepro] http://localhost:${PORT} (DEMO_PURCHASE=${DEMO_PURCHASE}, env=${NODE_ENV})`));
+  // Custom 404
+app.use((req, res) => {
+  res.status(404).sendFile(require('path').join(__dirname, 'public', '404.html'));
+});
+app.listen(PORT, () => console.log(`[tradepro] http://localhost:${PORT} (DEMO_PURCHASE=${DEMO_PURCHASE}, env=${NODE_ENV})`));
 }
 
 module.exports = { app, db, getSettings, getPricing, orderedLessons, isLessonUnlocked };
