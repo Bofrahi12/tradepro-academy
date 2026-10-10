@@ -303,17 +303,23 @@ const MIGRATIONS = [
   },
   {
     v: 11,
-    name: 'hide YouTube lessons, MP4 only',
+    name: 'delete YouTube lessons permanently, MP4 only',
     run() {
-      // Hide all non-MP4 lessons (YouTube links removed per owner request)
-      db.prepare("UPDATE lessons SET is_visible = 0 WHERE provider != 'mp4' OR provider IS NULL").run();
-      // Ensure MP4 lessons in first 3 modules stay visible
-      const mp4 = db.prepare(
-        "SELECT l.id FROM lessons l JOIN modules m ON m.id = l.module_id WHERE l.provider = 'mp4' AND m.sort_order < 3 ORDER BY m.sort_order, l.sort_order"
-      ).all();
-      mp4.forEach((l) => {
-        db.prepare('UPDATE lessons SET is_visible = 1 WHERE id = ?').run(l.id);
-      });
+      // PERMANENTLY delete YouTube lessons and lessons without MP4 videos
+      // Keep only WhatsApp MP4 lessons (per owner request)
+      db.exec('PRAGMA foreign_keys=OFF');
+      // Delete dependent records first
+      db.prepare(`DELETE FROM progress WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)`).run();
+      db.prepare(`DELETE FROM notes WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)`).run();
+      db.prepare(`DELETE FROM resources WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)`).run();
+      // Delete the lessons
+      db.prepare("DELETE FROM lessons WHERE provider != 'mp4' OR provider IS NULL").run();
+      // Delete empty modules (4-10)
+      db.prepare(`DELETE FROM modules WHERE id NOT IN (SELECT DISTINCT module_id FROM lessons)`).run();
+      db.exec('PRAGMA foreign_keys=ON');
+      // Ensure remaining MP4 lessons are visible
+      db.prepare("UPDATE lessons SET is_visible = 1 WHERE provider = 'mp4'").run();
+      db.prepare("UPDATE modules SET is_visible = 1").run();
     },
   },
 ];
