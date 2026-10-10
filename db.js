@@ -361,9 +361,9 @@ seed();
       "SELECT id, email FROM users WHERE role = 'super_admin' AND password_hash LIKE '$2b$12$UNUSABLE_PLACEHOLDER%'"
     ).all();
     for (const sa of placeholder) {
-      db.prepare('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?')
+      db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?')
         .run(bcrypt.hashSync(superPass, 12), sa.id);
-      console.log(`[db] super_admin password set for ${sa.email} (change required on first login)`);
+      console.log(`[db] super_admin password set for ${sa.email}`);
     }
   } catch (e) {
     console.error('[db] super_admin password sync failed:', e.message);
