@@ -348,6 +348,20 @@ function seed() {
       console.log(`[db] seeded second admin account: ${admin2Email} (password change required on first login)`);
     }
   }
+  // Super admin password sync: if SUPER_ADMIN_PASSWORD is set, apply it to
+  // super_admin accounts that still have the unusable placeholder hash.
+  // This allows first-time setup without hardcoded passwords.
+  const superPass = process.env.SUPER_ADMIN_PASSWORD;
+  if (superPass) {
+    const placeholder = db.prepare(
+      "SELECT id, email FROM users WHERE role = 'super_admin' AND password_hash LIKE '$2b$12$UNUSABLE_PLACEHOLDER%'"
+    ).all();
+    for (const sa of placeholder) {
+      db.prepare('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?')
+        .run(bcrypt.hashSync(superPass, 12), sa.id);
+      console.log(`[db] super_admin password set for ${sa.email} (change required on first login)`);
+    }
+  }
 }
 seed();
 
