@@ -312,6 +312,13 @@ app.get('/api/contact-info', (req, res) => {
 // ---------- public API ----------
 app.get('/api/settings', (req, res) => res.json(getSettings()));
 
+app.get('/api/stats', (req, res) => {
+  try {
+    const students = db.prepare("SELECT COUNT(*) c FROM users WHERE role = 'student'").get().c;
+    const lessons = db.prepare("SELECT COUNT(*) c FROM lessons WHERE is_visible = 1").get().c;
+    res.json({ students, lessons });
+  } catch (e) { res.json({ students: 0, lessons: 6 }); }
+});
 app.get('/api/curriculum', (req, res) => {
   const u = me(req);
   const privileged = u && (u.role === 'admin' || u.enrolled);
