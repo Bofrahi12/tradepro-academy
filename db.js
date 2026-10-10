@@ -446,7 +446,24 @@ try {
       db.prepare("UPDATE lessons SET video_url = ?, provider = ? WHERE id = ?").run(url, provider, lid);
     }
   }
-  // Lesson thumbnails, wired by lesson order (only if empty).
+  // PERMANENT: keep only WhatsApp MP4 lessons, delete everything else.
+// Runs on every boot after video wiring (owner request 2026-10-10).
+try {
+  db.exec('PRAGMA foreign_keys=OFF');
+  db.prepare("DELETE FROM progress WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)").run();
+  db.prepare("DELETE FROM notes WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)").run();
+  db.prepare("DELETE FROM resources WHERE lesson_id IN (SELECT id FROM lessons WHERE provider != 'mp4' OR provider IS NULL)").run();
+  db.prepare("DELETE FROM lessons WHERE provider != 'mp4' OR provider IS NULL").run();
+  db.prepare("DELETE FROM modules WHERE id NOT IN (SELECT DISTINCT module_id FROM lessons)").run();
+  db.exec('PRAGMA foreign_keys=ON');
+  db.prepare("UPDATE lessons SET is_visible = 1 WHERE provider = 'mp4'").run();
+  db.prepare("UPDATE modules SET is_visible = 1").run();
+  const remaining = db.prepare("SELECT COUNT(*) c FROM lessons").get().c;
+  console.log(`[db] MP4-only cleanup: ${remaining} lessons remain`);
+} catch (e) {
+  console.log('[db] MP4 cleanup error:', e.message);
+}
+// Lesson thumbnails, wired by lesson order (only if empty).
   const thumbs = {
     4: '/images/thumbnails/hammer-candle.png',
     5: '/images/thumbnails/lesson-05-timeframes.jpg',
