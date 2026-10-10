@@ -26,7 +26,7 @@ const PUBLIC_URL = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const GA4_ID = process.env.GA4_MEASUREMENT_ID || '';
 const META_PIXEL_ID = process.env.META_PIXEL_ID || '';
-const PROTECT_MEDIA = process.env.PROTECT_MEDIA === 'true';
+const PROTECT_MEDIA = process.env.PROTECT_MEDIA !== 'false';
 const MEDIA_SECRET = process.env.MEDIA_SIGNING_SECRET || SESSION_SECRET || 'media-dev-secret';
 
 // ---------- production guards ----------
@@ -355,7 +355,7 @@ function mediaToken(lessonId, ttlSec = 7200) {
 }
 function protectMediaUrl(l, u) {
   if (!PROTECT_MEDIA || l.provider !== 'mp4' || !l.video_url) return l.video_url;
-  if (u && u.role === 'admin') return l.video_url;
+  if (u && (u.role === 'admin' || u.role === 'super_admin')) return l.video_url;
   const { token, exp } = mediaToken(l.id);
   return `/api/media/lesson/${l.id}?token=${token}&exp=${exp}`;
 }
@@ -363,14 +363,46 @@ app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
   const l = db.prepare('SELECT * FROM lessons WHERE id = ? AND is_visible = 1').get(req.params.id);
   if (!l || l.provider !== 'mp4' || !l.video_url) return res.status(404).json({ error: 'not_found' });
   const u = me(req);
-  const privileged = u && (u.role === 'admin' || u.enrolled);
+  const privileged = u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled);
   if (!privileged && !l.is_free_preview) return res.status(403).json({ error: 'enrollment_required' });
   const { token, exp } = req.query;
   const expected = crypto.createHmac('sha256', MEDIA_SECRET).update(`${l.id}.${exp}`).digest('hex');
   if (!exp || Number(exp) < Date.now() / 1000 || !token || !timingSafeEq(token, expected)) {
     return res.status(403).json({ error: 'invalid_media_token' });
   }
-  res.redirect(302, l.video_url);
+  // Stream the file directly (never expose the raw public path).
+  const rel = String(l.video_url).replace(/^\/+/, '');
+  const filePath = path.join(__dirname, 'public', rel);
+  if (!filePath.startsWith(path.join(__dirname, 'public') + path.sep)) return res.status(403).json({ error: 'forbidden' });
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) return res.status(404).json({ error: 'not_found' });
+    const range = req.headers.range;
+    const contentType = 'video/mp4';
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+      if (isNaN(start) || isNaN(end) || start >= stat.size || end >= stat.size) {
+        res.status(416).set('Content-Range', `bytes */${stat.size}`).end();
+        return;
+      }
+      const chunkSize = end - start + 1;
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunkSize,
+        'Content-Type': contentType,
+      });
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': stat.size,
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes',
+      });
+      fs.createReadStream(filePath).pipe(res);
+    }
+  });
 });
 
 app.get('/api/lesson/:id', (req, res) => {
@@ -996,6 +1028,15 @@ app.get('/terms', page('terms.html'));
 app.get('/refund', page('refund.html'));
 app.get('/contact', page('contact.html'));
 app.get('/lesson/:id', page('lesson.html'));
+
+// Block direct access to paid lesson videos (only intro.mp4 stays public).
+// Protected MP4s are served exclusively via signed /api/media/lesson/:id URLs.
+app.use('/videos/:file', (req, res, next) => {
+  const file = String(req.params.file || '');
+  if (file === 'intro.mp4' || file === 'intro-poster.jpg') return next();
+  if (!file.toLowerCase().endsWith('.mp4')) return next();
+  return res.status(403).json({ error: 'enrollment_required' });
+});
 
 // Static assets after page routes (page routes take precedence for /).
 app.use(express.static(path.join(__dirname, 'public')));
