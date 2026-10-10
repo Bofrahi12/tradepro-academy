@@ -273,6 +273,35 @@
 </section>
 
 <!-- ============ PRICING ============ -->
+<section>
+  <div class="container">
+    <h2 class="section-title reveal">الفرق واضح 📊</h2>
+    <p class="section-sub reveal">شوف الفرق بين المتداول العشوائي والمتداول المنظم</p>
+    <div class="ba-wrap">
+      <div class="ba-card bad reveal">
+        <h3>😰 بدون الدورة</h3>
+        <ul>
+          <li>تداول عشوائي بدون خطة</li>
+          <li>خسائر متكررة بدون فهم السبب</li>
+          <li>قرارات عاطفية (خوف وطمع)</li>
+          <li>بدون إدارة رأس المال</li>
+          <li>تخبط بين الاستراتيجيات</li>
+        </ul>
+      </div>
+      <div class="ba-card good reveal">
+        <h3>🚀 مع TradePro Academy</h3>
+        <ul>
+          <li>قراءة الشارت بثقة في 60 ثانية</li>
+          <li>فهم الشموع والاتجاهات الحقيقية</li>
+          <li>دخول وخروج بقواعد واضحة</li>
+          <li>إدارة مخاطر تحمي رأس مالك</li>
+          <li>منهج منظم خطوة بخطوة</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="pricing" style="padding-top:0">
   <div class="container">
     <h2 class="section-title reveal">احصل على الدورة الآن</h2>
@@ -571,6 +600,58 @@
     var el=document.getElementById('stat-students');
     if(el&&typeof d.students!=='undefined'){el.textContent=d.students;}
   }).catch(function(){});
+})();
+</script><script>
+(function(){
+  // Golden particles
+  var cv=document.getElementById('hero-particles');
+  if(cv){
+    var ctx=cv.getContext('2d'),W,H,ps=[];
+    function rs(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+    rs();window.addEventListener('resize',rs);
+    for(var i=0;i<60;i++)ps.push({x:Math.random(),y:Math.random(),r:Math.random()*2+0.5,s:Math.random()*0.0008+0.0002,o:Math.random()*0.6+0.2,ph:Math.random()*6.28});
+    (function anim(t){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<ps.length;i++){var p=ps[i];
+        p.y-=p.s;if(p.y<0)p.y=1;
+        var tw=p.o*(0.6+0.4*Math.sin(t/900+p.ph));
+        ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r,0,6.28);
+        ctx.fillStyle='rgba(245,197,24,'+tw.toFixed(2)+')';ctx.fill();
+      }
+      requestAnimationFrame(anim);
+    })(0);
+  }
+  // Marquee duplicate for seamless loop
+  var mq=document.getElementById('marquee-inner');
+  if(mq)mq.innerHTML+=mq.innerHTML;
+  // Animated counters
+  function animateNum(el,target,dur){
+    var st=null;
+    function step(ts){if(!st)st=ts;var pr=Math.min((ts-st)/dur,1);
+      el.textContent=Math.floor(target*(1-Math.pow(1-pr,3)));
+      if(pr<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  }
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){var el=e.target,t=parseInt(el.dataset.count||el.textContent,10);
+      if(!isNaN(t)&&t>0)animateNum(el,t,1500);io.unobserve(el);}
+  });},{threshold:0.5});
+  document.querySelectorAll('#stat-students').forEach(function(el){el.dataset.count='';io.observe(el);});
+  // Purchase notifications
+  var names=['محمد','يوسف','أمين','خالد','سفيان','عمر','حمزة','بلال','إلياس','مهدي'];
+  var cities=['طنجة','الدار البيضاء','الرباط','فاس','مراكش','أكادير','مكناس','وجدة','القنيطرة','تطوان'];
+  function showNotif(){
+    var n=names[Math.floor(Math.random()*names.length)];
+    var c=cities[Math.floor(Math.random()*cities.length)];
+    var m=Math.floor(Math.random()*28)+2;
+    var d=document.createElement('div');d.className='buy-notif';
+    d.innerHTML='<div class="bicon">🎉</div><div class="btxt"><b>'+n+' من '+c+'</b><br>اشترى الدورة الآن<div class="btime">قبل '+m+' دقيقة · تم التحقق ✓</div></div>';
+    document.body.appendChild(d);
+    setTimeout(function(){d.classList.add('show');},100);
+    setTimeout(function(){d.classList.remove('show');setTimeout(function(){d.remove();},600);},4500);
+  }
+  setTimeout(showNotif,8000);
+  setInterval(showNotif,25000);
 })();
 </script></body>
 </html>
