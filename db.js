@@ -285,6 +285,22 @@ const MIGRATIONS = [
       }
     },
   },
+  {
+    v: 10,
+    name: 'show only 8 video lessons',
+    run() {
+      const lessons = db.prepare(
+        'SELECT l.id FROM lessons l JOIN modules m ON m.id = l.module_id ORDER BY m.sort_order, l.sort_order'
+      ).all();
+      lessons.forEach((l, idx) => {
+        db.prepare('UPDATE lessons SET is_visible = ? WHERE id = ?').run(idx < 8 ? 1 : 0, l.id);
+      });
+      const mods = db.prepare('SELECT id FROM modules ORDER BY sort_order').all();
+      mods.forEach((m, idx) => {
+        db.prepare('UPDATE modules SET is_visible = ? WHERE id = ?').run(idx < 3 ? 1 : 0, m.id);
+      });
+    },
+  },
 ];
 for (const m of MIGRATIONS) {
   const done = db.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(m.v);
