@@ -8,6 +8,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <script src="/js/config.js"></script><script src="/js/store.js"></script><script src="/js/app.js"></script>
+
+<style>
+.vid-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.vid-stat{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:12px 18px;display:flex;flex-direction:column;align-items:center;min-width:100px}
+.vid-stat .vid-num{font-size:1.6rem;font-weight:800}
+.vid-stat.ok .vid-num{color:var(--green)}
+.vid-stat.warn .vid-num{color:#ffb020}
+.vid-alert{background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;color:#ffb020}
+.vid-ok{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;color:var(--green)}
+.vid-grid{display:grid;gap:20px}
+.vid-module h4{margin-bottom:10px;color:var(--text)}
+.vid-module{display:grid;gap:10px}
+.vid-card{display:flex;gap:12px;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:10px;align-items:center}
+.vid-card.no-vid{border-color:rgba(255,176,32,.4)}
+.vid-thumb{width:120px;height:68px;border-radius:8px;background:#0a1428;display:grid;place-items:center;position:relative;cursor:pointer;overflow:hidden;flex-shrink:0}
+.vid-thumb img{width:100%;height:100%;object-fit:cover}
+.vid-play{font-size:1.5rem;opacity:.8}
+.vid-missing{font-size:1.5rem}
+.vid-info{flex:1;display:grid;gap:6px}
+.vid-title{font-weight:700}
+.vid-meta{display:flex;gap:6px;flex-wrap:wrap}
+</style>
 </head>
 <body>
 <header class="site-header" id="site-header"></header>
@@ -117,6 +139,7 @@ async function loadTab(t) {
   if (t === 'overview') return renderOverview();
   if (t === 'orders') return renderOrders();
   if (t === 'content') return renderContent();
+  if (t === 'videos') return renderVideos();
   if (t === 'site') return renderSite();
   if (t === 'students') return renderStudents();
   if (t === 'audit') return renderAuditLog();
@@ -218,6 +241,58 @@ async function renderAuditLog() {
 }
 
 // ---------- content: modules + lessons ----------
+
+async function renderVideos() {
+  const panel = document.getElementById('panel-videos');
+  let mods, lessons;
+  try {
+    mods = (await Store.adminList('modules')).sort((a, b) => a.sort_order - b.sort_order);
+    lessons = await Store.adminList('lessons');
+  } catch (err) {
+    panel.innerHTML = '<div class="card" style="padding:30px;text-align:center;color:#ff6b6b">تعذّر تحميل الفيديوهات</div>';
+    return;
+  }
+  const withVideo = lessons.filter(l => l.video_url);
+  const withoutVideo = lessons.filter(l => !l.video_url);
+  const mp4Count = lessons.filter(l => l.provider === 'mp4').length;
+  const ytCount = lessons.filter(l => l.provider === 'youtube' && l.video_url).length;
+  panel.innerHTML = `
+    <div class="vid-stats">
+      <div class="vid-stat"><span class="vid-num">${lessons.length}</span><span>مجموع الدروس</span></div>
+      <div class="vid-stat ok"><span class="vid-num">${withVideo.length}</span><span>✅ عندها فيديو</span></div>
+      <div class="vid-stat warn"><span class="vid-num">${withoutVideo.length}</span><span>⚠️ بلا فيديو</span></div>
+      <div class="vid-stat"><span class="vid-num">${mp4Count}</span><span>🎬 MP4 مباشر</span></div>
+      <div class="vid-stat"><span class="vid-num">${ytCount}</span><span>📺 يوتيوب</span></div>
+    </div>
+    ${withoutVideo.length ? `<div class="vid-alert">⚠️ ${withoutVideo.length} دروس بلا فيديو: ${withoutVideo.map(l => E(l.title)).join('، ')}</div>` : '<div class="vid-ok">✅ كل الدروس عندها فيديو!</div>'}
+    <div class="vid-grid">
+      ${mods.map(m => {
+        const ls = lessons.filter(l => l.module_id === m.id).sort((a, b) => a.sort_order - b.sort_order);
+        if (!ls.length) return '';
+        return `<div class="vid-module"><h4>${E(m.title)}</h4>
+          ${ls.map(l => `
+            <div class="vid-card ${l.video_url ? '' : 'no-vid'}">
+              <div class="vid-thumb" ${l.video_url ? `onclick="window.open('${E(l.video_url)}','_blank')"` : ''}>
+                ${l.thumbnail ? `<img src="${E(l.thumbnail)}" alt="">` : '<span class="vid-play">▶</span>'}
+                ${l.video_url ? '<span class="vid-play">▶</span>' : '<span class="vid-missing">⚠️</span>'}
+              </div>
+              <div class="vid-info">
+                <div class="vid-title">${E(l.title)}</div>
+                <div class="vid-meta">
+                  <span class="pill ${l.provider === 'mp4' ? 'on' : ''}">${E(l.provider || '—')}</span>
+                  ${l.is_visible ? '<span class="pill on">ظاهر</span>' : '<span class="pill off">مخفي</span>'}
+                  ${l.is_free_preview ? '<span class="pill on">مجاني</span>' : ''}
+                </div>
+                ${l.video_url
+                  ? `<button class="btn btn-sm" onclick="window.open('${E(l.video_url)}','_blank')">🎬 مشاهدة</button>`
+                  : `<button class="btn btn-sm btn-primary" onclick="document.querySelector('[data-tab=content]').click()">+ زيد فيديو</button>`}
+              </div>
+            </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 async function renderContent() {
   const panel = document.getElementById('panel-content');
   let mods, lessons;
