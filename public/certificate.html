@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شهادة إتمام | TradePro Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.cert-wrap{max-width:800px;margin:40px auto;padding:20px}
+.cert{border:3px solid var(--gold);border-radius:20px;padding:60px 40px;text-align:center;background:linear-gradient(135deg,#0e1a2e,#1a2332);position:relative;overflow:hidden}
+.cert::before{content:'🎓';font-size:4rem;display:block;margin-bottom:20px}
+.cert h1{font-size:2rem;color:var(--gold);margin-bottom:10px}
+.cert .name{font-size:1.8rem;font-weight:800;margin:20px 0;padding:16px;border-top:1px solid rgba(245,197,24,.3);border-bottom:1px solid rgba(245,197,24,.3)}
+.cert p{color:var(--muted);margin:8px 0}
+@media print{.no-print{display:none}.cert-wrap{margin:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="cert-wrap">
+<div class="cert" id="cert">
+<h1>شهادة إتمام</h1>
+<p>تشهد أكاديمية TradePro بأن</p>
+<div class="name" id="cert-name">—</div>
+<p>قد أتم بنجاح دورة <b>أساسيات التداول الاحترافي</b></p>
+<p>6 دروس فيديو • اختبارات • بونص</p>
+<p style="margin-top:20px">التاريخ: <span id="cert-date"></span></p>
+</div>
+<div class="no-print" style="text-align:center;margin-top:20px">
+<button class="btn btn-primary btn-lg" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+<a href="/dashboard" class="btn btn-ghost" style="margin-right:10px">العودة للوحة الطالب</a>
+</div></div>
+<script>
+fetch('/api/me').then(r=>r.json()).then(u=>{
+  document.getElementById('cert-name').textContent = u.name || u.email || 'الطالب';
+  document.getElementById('cert-date').textContent = new Date().toLocaleDateString('ar');
+}).catch(()=>{document.getElementById('cert-name').textContent='الطالب';});
+</script>
+</body></html>
