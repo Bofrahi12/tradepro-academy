@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <script src="/js/config.js"></script><script src="/js/store.js"></script><script src="/js/app.js"></script>
+<script src="/js/quizzes.js"></script>
 <style>
 .quiz-card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:20px;margin:20px 0}
 .quiz-q{margin-bottom:16px;padding:12px;background:rgba(255,255,255,.02);border-radius:10px}
@@ -173,6 +174,50 @@
       return `<div class="res-item"><span>${icon} ${title} <small class="ft">${fileType}</small></span>${downloadButton}</div>`;
     }).join('');
   }
+})();
+</script>
+<script>
+(function(){
+  function initQuiz(lessonId){
+    var quiz = (window.LESSON_QUIZZES||{})[String(lessonId)];
+    var wrap = document.getElementById('quiz-wrap');
+    if(!quiz || !wrap) return;
+    wrap.style.display = 'block';
+    var qdiv = document.getElementById('quiz-questions');
+    qdiv.innerHTML = quiz.map(function(item, qi){
+      return '<div class="quiz-q" data-qi="'+qi+'"><p>'+(qi+1)+'. '+item.q+'</p>' +
+        item.options.map(function(opt, oi){
+          return '<label><input type="radio" name="q'+qi+'" value="'+oi+'"> '+opt+'</label>';
+        }).join('') + '</div>';
+    }).join('');
+    document.getElementById('quiz-submit').onclick = function(){
+      var correct = 0;
+      quiz.forEach(function(item, qi){
+        var qel = qdiv.querySelector('[data-qi="'+qi+'"]');
+        var sel = qel.querySelector('input:checked');
+        qel.classList.remove('correct','wrong');
+        qel.querySelectorAll('label').forEach(function(l){l.classList.remove('correct-answer','wrong-answer');});
+        if(sel){
+          var labels = qel.querySelectorAll('label');
+          labels[item.answer].classList.add('correct-answer');
+          if(parseInt(sel.value)===item.answer){correct++;qel.classList.add('correct');}
+          else{qel.classList.add('wrong');labels[parseInt(sel.value)].classList.add('wrong-answer');}
+        }
+      });
+      var res = document.getElementById('quiz-result');
+      if(correct===quiz.length){
+        res.innerHTML = '<p style="color:#00e5a0;font-weight:700">🎉 ممتاز! أجبت صحيحاً على كل الأسئلة ('+correct+'/'+quiz.length+')</p>';
+      } else {
+        res.innerHTML = '<p style="color:#ffb020;font-weight:700">أجبت صحيحاً على '+correct+' من '+quiz.length+'. راجع الدرس وحاول مجدداً 💪</p>';
+      }
+    };
+  }
+  // Hook into lesson load - check every second for lesson id
+  var check = setInterval(function(){
+    var m = location.pathname.match(/(\d+)/);
+    if(m){clearInterval(check);initQuiz(m[1]);}
+  }, 500);
+  setTimeout(function(){clearInterval(check);}, 10000);
 })();
 </script>
 </body>
