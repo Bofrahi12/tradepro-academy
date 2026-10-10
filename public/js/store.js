@@ -193,6 +193,7 @@
     me: () => CFG.demo ? Demo.me() : apiFetch('/auth/me'),
     register: (n, e, p) => CFG.demo ? Demo.register(n, e, p) : apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ name: n, email: e, password: p }) }),
     login: (e, p) => CFG.demo ? Demo.login(e, p) : apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email: e, password: p }) }),
+    adminLogin: (e, p, remember) => CFG.demo ? Demo.login(e, p) : apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email: e, password: p, remember: !!remember }) }),
     logout: () => CFG.demo ? Demo.logout() : apiFetch('/auth/logout', { method: 'POST' }),
     forgot: (e) => CFG.demo ? Demo.forgot(e) : apiFetch('/auth/forgot', { method: 'POST', body: JSON.stringify({ email: e }) }),
     reset: (t, p) => CFG.demo ? Demo.reset(t, p) : apiFetch('/auth/reset', { method: 'POST', body: JSON.stringify({ token: t, password: p }) }),
