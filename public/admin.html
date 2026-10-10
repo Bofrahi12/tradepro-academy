@@ -255,6 +255,7 @@ async function renderContent() {
                 <td>${E(l.duration || '—')}</td><td>${E(l.provider)}</td>
                 <td>${l.is_visible ? '<span class="pill on">ظاهر</span>' : '<span class="pill off">مخفي</span>'}</td>
                 <td><div class="row-actions">
+                  <button class="icon-btn" data-lpreview="${l.id}" title="معاينة الفيديو">🎬</button>
                   <button class="icon-btn" data-ledit="${l.id}">✏️</button>
                   <button class="icon-btn" data-lvis="${l.id}">${l.is_visible ? '👁️' : '🚫'}</button>
                   <button class="icon-btn" data-lup="${l.id}">⬆️</button>
@@ -277,7 +278,16 @@ async function renderContent() {
   });
 
   panel.onclick = async (e) => {
-    const b = e.target.closest('[data-medit],[data-mvis],[data-mup],[data-mdown],[data-mdel],[data-ladd],[data-ledit],[data-lvis],[data-lup],[data-ldown],[data-ldel],[data-lres]');
+    const b = e.target.closest('[data-medit],[data-mvis],[data-mup],[data-mdown],[data-mdel],[data-ladd],[data-ledit],[data-lvis],[data-lup],[data-ldown],[data-ldel],[data-lres],[data-lpreview]');
+    if (b && b.hasAttribute('data-lpreview')) {
+      const l = lessons.find(x => x.id == b.getAttribute('data-lpreview'));
+      if (l && l.video_url) {
+        window.open(l.video_url, '_blank');
+      } else {
+        App.toast('لا يوجد فيديو لهذا الدرس');
+      }
+      return;
+    }
     if (!b) return;
     const get = (k) => b.dataset[k];
     const swapOrder = async (table, a, c) => {
