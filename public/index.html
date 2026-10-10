@@ -92,6 +92,20 @@
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,197,24,.35)}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
 .reveal.visible{opacity:1;transform:none}
+</style><style>
+.exit-popup{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:20px}
+.exit-popup.show{opacity:1;pointer-events:auto}
+.exit-card{background:#0e1a2e;border:1px solid rgba(245,197,24,.4);border-radius:20px;padding:36px;text-align:center;max-width:420px;position:relative;transform:scale(.9);transition:transform .3s;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.exit-popup.show .exit-card{transform:scale(1)}
+.exit-close{position:absolute;top:12px;left:12px;background:none;border:none;color:var(--muted);font-size:1.8rem;cursor:pointer;line-height:1}
+.exit-card h3{margin-bottom:10px}
+.exit-card p{color:var(--muted);margin-bottom:8px}
+/* steps after buy */
+.steps-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:24px}
+.step-card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:20px;text-align:center}
+.step-num{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e0a800);color:#000;font-weight:800;font-size:1.2rem;display:grid;place-items:center;margin:0 auto 12px}
+.step-card h4{margin-bottom:6px}
+.step-card p{color:var(--muted);font-size:.85rem}
 </style></head>
 <body>
 
@@ -360,6 +374,17 @@
     <div class="bonus-total reveal">
       <span>القيمة الإجمالية: <s>$97 + $127</s></span>
       <span class="bonus-today">اليوم فقط: <b>$20</b></span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title reveal">كيف تبدأ؟ 3 خطوات فقط</h2>
+    <div class="steps-row">
+      <div class="step-card reveal"><div class="step-num">1</div><h4>💳 اشترِ الدورة</h4><p>دفع آمن بالبطاقة عبر Stripe</p></div>
+      <div class="step-card reveal"><div class="step-num">2</div><h4>📧 توصلك رسالة</h4><p>بيانات الدخول + روابط البونص</p></div>
+      <div class="step-card reveal"><div class="step-num">3</div><h4>🎬 ابدأ التعلم</h4><p>ادخل لمنصتك وشاهد الدروس فوراً</p></div>
     </div>
   </div>
 </section>
@@ -727,5 +752,34 @@
   });},{threshold:0.12});
   document.querySelectorAll('.reveal:not(.visible)').forEach(function(el){io.observe(el);});
 })();
-</script></body>
+</script>
+<div id="exit-popup" class="exit-popup">
+  <div class="exit-card">
+    <button class="exit-close" onclick="document.getElementById('exit-popup').classList.remove('show')">&times;</button>
+    <div style="font-size:3rem;margin-bottom:12px">🎁</div>
+    <h3>استنى! عندك خصم إضافي</h3>
+    <p>خصم <b style="color:#00e5a0">10%</b> إضافي على الدورة + كل البونص ($127)</p>
+    <p style="font-size:2rem;font-weight:800;color:var(--gold)">$18 <s style="font-size:1rem;color:var(--muted)">$20</s></p>
+    <button class="btn btn-primary btn-lg btn-block" onclick="document.getElementById('exit-popup').classList.remove('show');document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">احصل على الخصم الآن</button>
+    <p style="font-size:.75rem;color:var(--muted);margin-top:10px">⏳ العرض ينتهي قريباً</p>
+  </div>
+</div>
+<script>
+(function(){
+  var shown=false;
+  try{shown=sessionStorage.getItem('exitShown')==='1';}catch(e){}
+  document.addEventListener('mouseout',function(e){
+    if(shown)return;
+    if(!e.relatedTarget&&e.clientY<8){
+      shown=true;
+      try{sessionStorage.setItem('exitShown','1');}catch(e2){}
+      document.getElementById('exit-popup').classList.add('show');
+    }
+  });
+  document.getElementById('exit-popup').addEventListener('click',function(e){
+    if(e.target===this)this.classList.remove('show');
+  });
+})();
+</script>
+</body>
 </html>
