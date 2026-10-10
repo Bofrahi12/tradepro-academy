@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a1428">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>{{SEO_TITLE}}</title>
 <meta name="description" content="{{META_DESCRIPTION}}">
 <link rel="canonical" href="{{CANONICAL_URL}}">
@@ -133,7 +138,7 @@
 
 <div class="announce">🚀 سعر الإطلاق: <b>$20</b> بدل <b>$97</b> — <a href="#pricing">احصل على الدورة الآن</a></div>
 
-<header class="site-header" id="site-header"><div class="container"><a class="logo" href="/"><img class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span>{{COURSE_NAME}}</span></a><button class="menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">☰</button><nav class="nav-links" id="main-nav"><a href="/">الرئيسية</a><a href="/course">المنهج</a><a href="/blog/">📚 المدونة</a><a href="/about.html">من نحن</a></nav><div class="header-actions"><a class="btn btn-ghost btn-sm" href="/login">دخول</a><a class="btn btn-primary btn-sm" href="/register">ابدأ الآن</a></div></div></header>
+<header class="site-header" id="site-header"><div class="container"><a class="logo" href="/"><img loading="lazy" class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span>{{COURSE_NAME}}</span></a><button class="menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">☰</button><nav class="nav-links" id="main-nav"><a href="/">الرئيسية</a><a href="/course">المنهج</a><a href="/blog/">📚 المدونة</a><a href="/about.html">من نحن</a></nav><div class="header-actions"><a class="btn btn-ghost btn-sm" href="/login">دخول</a><a class="btn btn-primary btn-sm" href="/register">ابدأ الآن</a></div></div></header>
 
 <!-- ============ HERO (VSL) ============ -->
 <section class="hero" style="position:relative;overflow:hidden">
@@ -304,7 +309,7 @@
     <h2 class="section-title reveal">مدرب الدورة</h2>
     <p class="section-sub reveal">تعرّف على من سيأخذ بيدك في هذه الرحلة.</p>
     <div class="instructor reveal">
-      <div id="instructor-photo-wrap"><img class="instructor-photo" src="{{INSTRUCTOR_IMAGE}}" alt="{{INSTRUCTOR_NAME}}"></div>
+      <div id="instructor-photo-wrap"><img loading="lazy" class="instructor-photo" src="{{INSTRUCTOR_IMAGE}}" alt="{{INSTRUCTOR_NAME}}"></div>
       <div>
         <h3 data-s="INSTRUCTOR_NAME">{{INSTRUCTOR_NAME}}</h3>
         <div class="role">متداول محترف · 10 سنوات خبرة</div>
@@ -511,7 +516,7 @@
 
 <footer class="site-footer">
   <div class="container">
-    <div class="logo" style="justify-content:center;margin-bottom:10px"><img class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span data-s="COURSE_NAME">TradePro Academy</span></div>
+    <div class="logo" style="justify-content:center;margin-bottom:10px"><img loading="lazy" class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span data-s="COURSE_NAME">TradePro Academy</span></div>
     <p>© 2026 <span data-s="COURSE_NAME">TradePro Academy</span> — جميع الحقوق محفوظة.</p>
     <p style="margin-top:10px"><a href="/privacy" style="color:var(--muted)">سياسة الخصوصية</a> · <a href="/terms" style="color:var(--muted)">شروط الاستخدام</a> · <a href="/refund" style="color:var(--muted)">سياسة الاسترداد</a> · <a href="/contact" style="color:var(--muted)">تواصل معنا</a> · <a href="/admin/login" style="color:var(--muted);font-size:.75rem;opacity:.7">Admin Login</a></p>
   </div>
@@ -548,7 +553,7 @@
     // instructor photo
     const w = document.getElementById('instructor-photo-wrap');
     w.innerHTML = st.INSTRUCTOR_IMAGE
-      ? `<img class="instructor-photo" src="${App.esc(st.INSTRUCTOR_IMAGE)}" alt="${App.esc(st.INSTRUCTOR_NAME)}">`
+      ? `<img loading="lazy" class="instructor-photo" src="${App.esc(st.INSTRUCTOR_IMAGE)}" alt="${App.esc(st.INSTRUCTOR_NAME)}">`
       : `<div class="instructor-photo ph">👨‍🏫</div>`;
     const dw = document.getElementById('instructor-desk-wrap');
     if (dw) dw.innerHTML = st.INSTRUCTOR_IMAGE_2
@@ -866,6 +871,9 @@
   document.getElementById('chat-send').onclick=send;
   input.onkeypress=function(e){if(e.key==='Enter')send();};
 })();
+</script>
+<script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){});}
 </script>
 </body>
 </html>
