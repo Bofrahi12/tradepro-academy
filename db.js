@@ -245,6 +245,46 @@ const MIGRATIONS = [
       db.prepare("UPDATE settings SET value = '1' WHERE key = 'SHOW_TESTIMONIALS'").run();
     },
   },
+  {
+    v: 9,
+    name: 'super_admin role + seed super admin accounts',
+    run() {
+      const cols = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get()?.sql || '';
+      if (!cols.includes('super_admin')) {
+        db.exec('PRAGMA foreign_keys=OFF');
+        db.exec(`CREATE TABLE users_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('admin', 'student', 'super_admin')),
+          must_change_password INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )`);
+        const hasMcp = hasColumn('users', 'must_change_password');
+        if (hasMcp) {
+          db.exec('INSERT INTO users_new (id, name, email, password_hash, role, must_change_password, created_at) SELECT id, name, email, password_hash, role, must_change_password, created_at FROM users');
+        } else {
+          db.exec("INSERT INTO users_new (id, name, email, password_hash, role, created_at) SELECT id, name, email, password_hash, role, created_at FROM users");
+        }
+        db.exec('DROP TABLE users');
+        db.exec('ALTER TABLE users_new RENAME TO users');
+        db.exec('PRAGMA foreign_keys=ON');
+      }
+      const superAdmins = ['mounir.boufrahi90@gmail.com', 'mohssinsinmo@gmail.com'];
+      for (const email of superAdmins) {
+        const existing = db.prepare('SELECT id, role FROM users WHERE email = ?').get(email);
+        if (existing) {
+          if (existing.role !== 'super_admin') {
+            db.prepare("UPDATE users SET role = 'super_admin', must_change_password = 1 WHERE id = ?").run(existing.id);
+          }
+        } else {
+          db.prepare("INSERT INTO users (name, email, password_hash, role, must_change_password) VALUES (?, ?, ?, 'super_admin', 1)")
+            .run('Super Admin', email, '$2b$12$UNUSABLE_PLACEHOLDER_NEVER_MATCHES_ANY_PASSWORD_xxxxxxxxxx');
+        }
+      }
+    },
+  },
 ];
 for (const m of MIGRATIONS) {
   const done = db.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(m.v);
