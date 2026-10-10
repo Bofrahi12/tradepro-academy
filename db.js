@@ -458,6 +458,30 @@ try {
   db.exec('PRAGMA foreign_keys=ON');
   db.prepare("UPDATE lessons SET is_visible = 1 WHERE provider = 'mp4'").run();
   db.prepare("UPDATE modules SET is_visible = 1").run();
+  // Restructure: 2 modules, correct titles matching video content, logical order
+  const mod1 = db.prepare("SELECT id FROM modules WHERE title LIKE '%قراءة الشارت%'").get();
+  const mod3 = db.prepare("SELECT id FROM modules WHERE title LIKE '%Price Action%'").get();
+  if (mod1 && mod3) {
+    // Module 1: قراءة الشارت (lessons 1,4,5,6)
+    db.prepare("UPDATE modules SET title = 'قراءة الشارت', description = 'أساسيات قراءة الشموع والأطر الزمنية والدعوم والمقاومات', sort_order = 0 WHERE id = ?").run(mod1.id);
+    // Module 2: Price Action (lessons 7,8)
+    db.prepare("UPDATE modules SET title = 'Price Action متقدم', description = 'مفاهيم BoS و ChoCh والأوردر بلوك', sort_order = 1 WHERE id = ?").run(mod3.id);
+    // Delete old module 1 (أساسيات التداول)
+    db.prepare("DELETE FROM modules WHERE title LIKE '%أساسيات التداول%'").run();
+    // Fix lesson titles to match videos + correct order
+    const fixes = [
+      [1, 'مقدمة: شمعة Hammer و Doji', mod1.id, 0],
+      [4, 'الشموع اليابانية: القراءة الصحيحة', mod1.id, 1],
+      [5, 'الأطر الزمنية: اختر المناسب لك', mod1.id, 2],
+      [6, 'الدعوم والمقاومات وخطوط الاتجاه', mod1.id, 3],
+      [7, 'BoS و ChoCh: كسر الهيكل', mod3.id, 0],
+      [8, 'الأوردر بلوك (Order Block)', mod3.id, 1],
+    ];
+    for (const [lid, title, mid, sort] of fixes) {
+      db.prepare("UPDATE lessons SET title = ?, module_id = ?, sort_order = ? WHERE id = ?").run(title, mid, sort, lid);
+    }
+    console.log('[db] curriculum restructured: 2 modules, 6 lessons');
+  }
   const remaining = db.prepare("SELECT COUNT(*) c FROM lessons").get().c;
   console.log(`[db] MP4-only cleanup: ${remaining} lessons remain`);
 } catch (e) {
