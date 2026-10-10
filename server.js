@@ -505,6 +505,11 @@ app.post('/api/auth/login', loginLimiter, (req, res) => {
     return res.status(401).json({ error: 'invalid_credentials' });
   }
   req.session.userId = row.id;
+  if (req.body?.remember === true) {
+    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+  } else {
+    req.session.cookie.expires = false;
+  }
   const u = me(req);
   res.json({ ...u, must_change_password: !!row.must_change_password });
 });
