@@ -29,6 +29,15 @@
 <script src="/js/config.js"></script>
 <script src="/js/store.js"></script>
 <script src="/js/app.js"></script>
+
+<style>
+.countdown-wrap{text-align:center;margin:12px 0 4px}
+.countdown-label{color:var(--muted);font-size:.9rem;margin-bottom:8px}
+.countdown{display:flex;gap:8px;justify-content:center;direction:ltr}
+.cd-box{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.25);border-radius:10px;padding:8px 12px;min-width:64px;text-align:center}
+.cd-box span{font-size:1.4rem;font-weight:800;color:#ff6b6b;font-variant-numeric:tabular-nums}
+.cd-box small{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
+</style>
 </head>
 <body>
 
@@ -237,7 +246,16 @@
     </div>
     <div class="pricing-wrap">
       <div class="pricing-card reveal">
-        <div class="limited">عرض الإطلاق</div>
+        <div class="limited">🔥 عرض الإطلاق</div>
+        <div class="countdown-wrap">
+          <p class="countdown-label">⏳ ينتهي العرض خلال:</p>
+          <div class="countdown" id="offer-countdown">
+            <div class="cd-box"><span id="cd-d">00</span><small>يوم</small></div>
+            <div class="cd-box"><span id="cd-h">00</span><small>ساعة</small></div>
+            <div class="cd-box"><span id="cd-m">00</span><small>دقيقة</small></div>
+            <div class="cd-box"><span id="cd-s">00</span><small>ثانية</small></div>
+          </div>
+        </div>
         <h3 style="margin-bottom:14px">📦 كل ما ستحصل عليه</h3>
         <ul class="value-stack">
           <li><span class="tick">✓</span><div>المنهج الكامل: 6 دروس فيديو<small>من الأساسيات إلى بناء خطة تداولك الخاصة</small></div></li>
@@ -488,6 +506,26 @@
   App.initReveal(); App.initAccordion();
   // consent-aware analytics (GA4 / Meta Pixel only after consent)
   try { App.initConsentAnalytics(window.APP_CONFIG || {}); } catch {}
+})();
+</script>
+
+<script>
+(function(){
+  var KEY='tradepro_offer_end';
+  var end=parseInt(localStorage.getItem(KEY)||'0',10);
+  if(!end||end<Date.now()){
+    end=Date.now()+3*24*3600*1000; // 3 days
+    try{localStorage.setItem(KEY,String(end));}catch(e){}
+  }
+  function pad(n){return String(n).padStart(2,'0');}
+  function tick(){
+    var d=Math.max(0,end-Date.now());
+    var dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+    var e=function(id,v){var el=document.getElementById(id);if(el)el.textContent=pad(v);};
+    e('cd-d',dd);e('cd-h',hh);e('cd-m',mm);e('cd-s',ss);
+    if(d<=0){end=Date.now()+3*24*3600*1000;try{localStorage.setItem(KEY,String(end));}catch(e2){}}
+  }
+  tick();setInterval(tick,1000);
 })();
 </script>
 </body>
