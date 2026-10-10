@@ -73,7 +73,7 @@ const requireAuth = (req, res, next) => {
 };
 const requireAdmin = (req, res, next) => {
   const u = req.session.userId && getUser(req.session.userId);
-  if (!u || u.role !== 'admin') return res.status(403).json({ error: 'admin_only' });
+  if (!u || (u.role !== 'admin' && u.role !== 'super_admin')) return res.status(403).json({ error: 'admin_only' });
   if (u.must_change_password && !req.path.endsWith('/change-password')) {
     return res.status(403).json({ error: 'password_change_required' });
   }
@@ -300,6 +300,7 @@ app.get('/js/config.js', (req, res) => {
   res.send(`window.APP_CONFIG = ${JSON.stringify({
     api: '/api', demo: false, demoPurchase: DEMO_PURCHASE,
     stripe: !!process.env.STRIPE_SECRET_KEY,
+    crypto: !!process.env.NOWPAYMENTS_API_KEY,
     ga4: GA4_ID || null, metaPixel: META_PIXEL_ID || null,
   })};`);
 });
@@ -966,7 +967,12 @@ app.get('/register', page('register.html'));
 app.get('/forgot', page('forgot.html'));
 app.get('/reset', page('reset.html'));
 app.get('/student', page('student.html'));
-app.get('/admin', page('admin.html'));
+app.get('/admin', (req, res, next) => {
+  const u = req.session.userId && getUser(req.session.userId);
+  if (!u || (u.role !== 'admin' && u.role !== 'super_admin')) return res.redirect('/admin/login');
+  next();
+}, page('admin.html'));
+app.get('/admin/login', page('admin-login.html'));
 app.get('/privacy', page('privacy.html'));
 app.get('/terms', page('terms.html'));
 app.get('/refund', page('refund.html'));
