@@ -46,17 +46,19 @@
     </div>
     <div class="offer-error" id="offer-coupon-msg" style="min-height:20px;font-size:.84rem"></div>
     <div id="offer-price-detail" style="font-size:.85rem;color:var(--muted);margin-bottom:6px"></div>
-    <form class="offer-form" id="checkout-form">
+    <div class="offer-form">
       <label for="buyer-email">بريدك الإلكتروني للوصول إلى الدورة</label>
       <input id="buyer-email" type="email" required placeholder="you@example.com" dir="ltr" autocomplete="email">
-      <button class="btn btn-primary btn-lg btn-block" type="submit">احصل على الدورة الآن</button>
-      <div class="offer-error" id="checkout-error" role="alert"></div>
-      <p class="offer-note">الدفع يتم عبر بوابة آمنة. Visa وMastercard وPayPal متاحة حسب إعداد حساب الدفع.</p>
-    </form>
-    <div style="text-align:center;margin:16px 0 10px;color:var(--muted);font-size:.85rem">— أو ادفع محلياً —</div>
-    <button class="btn btn-ghost btn-lg btn-block" id="manual-btn" type="button">🇲🇦 الدفع عبر تحويل بنكي (المغرب)</button>
+    </div>
+    <ol style="list-style:none;display:grid;gap:8px;margin:16px 0 4px;padding:0;font-size:.92rem;color:var(--muted)">
+      <li><b style="color:var(--green)">1.</b> اضغط زر «اطلب الآن» بالأسفل</li>
+      <li><b style="color:var(--green)">2.</b> أكّد طلبك عبر واتساب واستلم معلومات التحويل البنكي</li>
+      <li><b style="color:var(--green)">3.</b> حوّل المبلغ — يُفعَّل حسابك فور تأكيد الدفع</li>
+    </ol>
+    <button class="btn btn-primary btn-lg btn-block" id="manual-btn" type="button" style="margin-top:10px">🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي</button>
+    <p class="offer-note">دفع محلي بسيط عبر تحويل بنكي داخل المغرب، مع تأكيد سريع عبر واتساب — بدون بطاقة دولية.</p>
     <div id="manual-result" style="display:none;margin-top:14px;padding:16px;border:1px solid rgba(0,229,160,.35);border-radius:12px;background:rgba(0,229,160,.06)"></div>
-    <div class="offer-strip">🔒 لا يتم فتح المحتوى إلا بعد تأكيد الدفع من بوابة الدفع.</div>
+    <div class="offer-strip">🔒 يُفتح المحتوى فور تأكيد استلام التحويل من فريقنا.</div>
   </aside>
 </div></section>
 <section style="padding-top:20px"><div class="container"><div class="disclaimer">⚠️ <b>تنبيه مهم:</b> هذا المحتوى تعليمي فقط، وليس نصيحة مالية أو استثمارية. لا توجد ضمانات لتحقيق الأرباح، والتداول ينطوي على مخاطر.</div></div></section>
@@ -75,10 +77,6 @@
   if(s.PROMO_VIDEO_URL){document.getElementById('promo-video').innerHTML=App.videoEmbed(s.PROMO_VIDEO_PROVIDER||'youtube',s.PROMO_VIDEO_URL)}
   else{document.getElementById('promo-video').innerHTML='<video controls preload="metadata" poster="/videos/intro-poster.jpg" playsinline style="width:100%;height:100%"><source src="/videos/intro.mp4" type="video/mp4"></video>'}
   const params=new URLSearchParams(location.search); const source=params.get('utm_source'); if(source) localStorage.setItem('tpa_utm_source',source);
-  if (params.get('checkout')==='cancelled') {
-    const err=document.getElementById('checkout-error');
-    err.textContent='تم إلغاء عملية الدفع — لم يتم خصم أي مبلغ. يمكنك المحاولة مجدداً.';
-  }
   // coupon (server-side pricing — the server is the single source of truth)
   let appliedCoupon='';
   const prefill=params.get('coupon');
@@ -95,32 +93,6 @@
   }
   document.getElementById('offer-coupon-btn').addEventListener('click',()=>applyCoupon(document.getElementById('offer-coupon').value));
   if(prefill){ document.getElementById('offer-coupon').value=prefill; applyCoupon(prefill); }
-  function csrfToken(){const m=document.cookie.match(/(?:^|;\s*)tpa_csrf=([^;]*)/);return m?decodeURIComponent(m[1]):''}
-  document.getElementById('checkout-form').addEventListener('submit',async(e)=>{
-    e.preventDefault(); const error=document.getElementById('checkout-error'); const btn=e.currentTarget.querySelector('button');
-    error.textContent=''; btn.disabled=true; btn.textContent='جارٍ تجهيز الدفع...';
-    // Static demo (no backend): simulate enrollment for preview purposes.
-    if (window.APP_CONFIG && window.APP_CONFIG.demo) {
-      try {
-        const u = await Store.me();
-        if (!u) { location.href = 'register.html?enroll=1'; return; }
-        await Store.enrollSelf();
-        App.toast('تم تفعيل اشتراكك التجريبي ✓');
-        setTimeout(() => location.href = 'student.html', 900);
-      } catch { error.textContent='تعذر التفعيل التجريبي.'; btn.disabled=false; btn.textContent='احصل على الدورة الآن'; }
-      return;
-    }
-    try{
-      const email=document.getElementById('buyer-email').value.trim();
-      const r=await fetch('/api/checkout/session',{method:'POST',headers:{'Content-Type':'application/json','x-csrf-token':csrfToken()},credentials:'same-origin',body:JSON.stringify({email,coupon_code:appliedCoupon,utm_source:localStorage.getItem('tpa_utm_source')||''})});
-      const data=await r.json();
-      if(!r.ok) throw new Error(data.error||'checkout_unavailable');
-      location.href=data.url;
-    }catch(err){
-      if(err.message==='stripe_not_configured' && s.PAYMENT_URL){ location.href=s.PAYMENT_URL; return; }
-      error.textContent='تعذر تجهيز الدفع حالياً. حاول مرة أخرى أو تواصل معنا.'; btn.disabled=false; btn.textContent='احصل على الدورة الآن';
-    }
-  });
   document.getElementById('manual-btn').addEventListener('click',async()=>{
     const email=document.getElementById('buyer-email').value.trim();
     const box=document.getElementById('manual-result');
@@ -133,12 +105,12 @@
       box.style.display='block';
       box.innerHTML='<b style="color:var(--green)">✓ تم إنشاء طلبك رقم #'+d.order_id+'</b><br><span style="color:var(--muted);font-size:.9rem">المبلغ: '+amt+'. أكّد طلبك عبر واتساب لتصلك معلومات التحويل البنكي، وسيُفعَّل حسابك فور تأكيد استلام الدفع.</span>'
         +(d.whatsapp_url?'<br><a class="btn btn-primary btn-block" style="margin-top:12px" target="_blank" rel="noopener" href="'+d.whatsapp_url+'">💬 تأكيد الطلب عبر واتساب</a>':'');
-      mbtn.textContent='🇲🇦 الدفع عبر تحويل بنكي (المغرب)';
+      mbtn.textContent='🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي';
     }catch(e){
       box.style.display='block';
       box.style.borderColor='rgba(255,120,120,.4)'; box.style.background='rgba(255,120,120,.06)';
       box.innerHTML='<span style="color:#ff9a9a">تعذر إنشاء الطلب. حاول مرة أخرى أو تواصل معنا عبر واتساب.</span>';
-      mbtn.disabled=false; mbtn.textContent='🇲🇦 الدفع عبر تحويل بنكي (المغرب)';
+      mbtn.disabled=false; mbtn.textContent='🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي';
     }
   });
 })();
