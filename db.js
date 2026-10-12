@@ -331,6 +331,14 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 16,
+    name: 'honest pricing + community url setting',
+    run() {
+      db.prepare("UPDATE settings SET value = '' WHERE key = 'ORIGINAL_PRICE'").run();
+      db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('COMMUNITY_WHATSAPP_URL', 'https://chat.whatsapp.com/BacTWuiVvBR6p1FI8AXFrf')").run();
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
