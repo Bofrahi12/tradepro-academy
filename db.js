@@ -324,6 +324,13 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 15,
+    name: 'add TEST95 test coupon',
+    run() {
+      db.prepare("INSERT OR IGNORE INTO coupons (code, percent_off, is_active) VALUES ('TEST95', 95, 1)").run();
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
