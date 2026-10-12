@@ -48,6 +48,16 @@
           <h3 style="margin-bottom:10px">🎯 رحلة التعلم</h3>
           <p style="color:var(--muted)">تابع الدروس بالترتيب: الدرس الحالي مميز بالأخضر، والمكتمل بعلامة ✓. اضغط "تم إكمال الدرس" داخل كل درس لتحديث تقدمك وفتح الدرس التالي.</p>
         </div>
+        <div class="glass" style="margin-top:16px">
+          <h3 style="margin-bottom:10px">🎁 موارد الطلاب</h3>
+          <p style="color:var(--muted);margin-bottom:12px">ملفات عملية مرفقة مع الدورة — خاصة بالطلاب المسجلين فقط.</p>
+          <div style="display:grid;gap:10px">
+            <a class="btn btn-ghost btn-block" href="/bonuses/risk-calculator.xlsx" download>📊 ملف Excel لإدارة رأس المال</a>
+            <a class="btn btn-ghost btn-block" href="/bonuses/trade-checklist.pdf" download>✅ Checklist الدخول للصفقة</a>
+            <a class="btn btn-ghost btn-block" href="/bonuses/trading-plan.pdf" download>📝 قالب Trading Plan جاهز</a>
+            <span id="community-slot"></span>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -94,6 +104,18 @@
       document.getElementById('last-lesson-line').textContent = `الدرس الحالي: ${current.moduleTitle} — ${current.title}`;
     }
   }
+
+  // community link (server reveals it to enrolled students only)
+  try {
+    const r = await fetch('/api/community', { credentials: 'same-origin' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.whatsapp_url) {
+        document.getElementById('community-slot').innerHTML =
+          `<a class="btn btn-primary btn-block" target="_blank" rel="noopener" href="${d.whatsapp_url}">💬 مجتمع الطلاب على واتساب</a>`;
+      }
+    }
+  } catch (e) {}
 
   document.getElementById('sidebar').innerHTML =
     `<h4>📚 modules الدورة</h4>` + mods.map((m) => `
