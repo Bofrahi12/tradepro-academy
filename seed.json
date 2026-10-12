@@ -17,6 +17,10 @@
     {
       "code": "WELCOME10",
       "percent_off": 10
+    },
+    {
+      "code": "TEST95",
+      "percent_off": 95
     }
   ],
   "faqs": [
