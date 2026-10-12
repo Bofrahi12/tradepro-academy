@@ -11,27 +11,60 @@
 .cert h1{font-size:2rem;color:var(--gold);margin-bottom:10px}
 .cert .name{font-size:1.8rem;font-weight:800;margin:20px 0;padding:16px;border-top:1px solid rgba(245,197,24,.3);border-bottom:1px solid rgba(245,197,24,.3)}
 .cert p{color:var(--muted);margin:8px 0}
+.cert .code{margin-top:18px;font-size:.85rem;color:var(--muted);letter-spacing:1px}
+.lock-box{max-width:560px;margin:60px auto;text-align:center}
 @media print{.no-print{display:none}.cert-wrap{margin:0;max-width:none}}
 </style>
 </head>
 <body>
-<div class="cert-wrap">
+<div class="cert-wrap" id="cert-zone" style="display:none">
 <div class="cert" id="cert">
 <h1>شهادة إتمام</h1>
 <p>تشهد أكاديمية TradePro بأن</p>
 <div class="name" id="cert-name">—</div>
 <p>قد أتم بنجاح دورة <b>أساسيات التداول الاحترافي</b></p>
-<p>6 دروس فيديو • اختبارات • بونص</p>
-<p style="margin-top:20px">التاريخ: <span id="cert-date"></span></p>
+<p><span id="cert-lessons"></span> دروس فيديو • اختبارات • بونص</p>
+<p style="margin-top:20px">تاريخ الإصدار: <span id="cert-date"></span></p>
+<p class="code">رقم الشهادة: <span id="cert-code" dir="ltr"></span></p>
 </div>
 <div class="no-print" style="text-align:center;margin-top:20px">
 <button class="btn btn-primary btn-lg" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
-<a href="/dashboard" class="btn btn-ghost" style="margin-right:10px">العودة للوحة الطالب</a>
+<a href="/student" class="btn btn-ghost" style="margin-right:10px">العودة للوحة الطالب</a>
+</div></div>
+<div class="lock-box" id="lock-zone" style="display:none">
+<div class="form-card">
+<div style="font-size:3rem;margin-bottom:14px">🔒</div>
+<h2>الشهادة غير متاحة بعد</h2>
+<p class="sub" id="lock-msg">تُفتح الشهادة بعد الالتحاق بالدورة وإكمال جميع الدروس.</p>
+<a href="/course" class="btn btn-primary btn-lg btn-block" style="margin-top:14px">متابعة الدروس</a>
 </div></div>
 <script>
-fetch('/api/me').then(r=>r.json()).then(u=>{
-  document.getElementById('cert-name').textContent = u.name || u.email || 'الطالب';
-  document.getElementById('cert-date').textContent = new Date().toLocaleDateString('ar');
-}).catch(()=>{document.getElementById('cert-name').textContent='الطالب';});
+(async function(){
+  try {
+    const r = await fetch('/api/certificate', { credentials: 'same-origin' });
+    if (r.status === 401) {
+      document.getElementById('lock-msg').textContent = 'سجل الدخول أولاً لعرض شهادتك.';
+      document.getElementById('lock-zone').style.display = 'block';
+      return;
+    }
+    const d = await r.json();
+    if (!d.eligible) {
+      if (d.enrolled === false) {
+        document.getElementById('lock-msg').textContent = 'الشهادة خاصة بالطلاب المسجلين — التحق بالدورة أولاً.';
+      } else {
+        document.getElementById('lock-msg').textContent = 'أكملت ' + d.done + ' من ' + d.total + ' دروس — أكمل الباقي لفتح شهادتك.';
+      }
+      document.getElementById('lock-zone').style.display = 'block';
+      return;
+    }
+    document.getElementById('cert-name').textContent = d.name || 'الطالب';
+    document.getElementById('cert-lessons').textContent = d.total;
+    document.getElementById('cert-code').textContent = d.code;
+    document.getElementById('cert-date').textContent = new Date(d.issued_at.replace(' ', 'T') + 'Z').toLocaleDateString('ar');
+    document.getElementById('cert-zone').style.display = 'block';
+  } catch (e) {
+    document.getElementById('lock-zone').style.display = 'block';
+  }
+})();
 </script>
 </body></html>
