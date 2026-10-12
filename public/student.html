@@ -89,6 +89,7 @@
   flat.forEach((l, i) => { if (i === 0 || done.has(flat[i - 1].id)) unlocked.add(l.id); });
   const current = flat.find((l) => unlocked.has(l.id) && !done.has(l.id)) || flat[flat.length - 1];
 
+  if (pct === 100 && total > 0) document.getElementById('cert-banner').style.display = 'block';
   document.getElementById('pct').textContent = pct + '%';
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('done-count').textContent = doneCount;
@@ -128,20 +129,6 @@
         return `<a class="lesson-link ${cls}" href="${href}" ${isLocked ? 'onclick="return false" style="opacity:.45;cursor:not-allowed"' : ''}>
           <span class="st">${icon}</span><span>${App.esc(l.title)}</span></a>`;
       }).join('')}`).join('');
-})();
-</script>
-<script>
-(function(){
-  var check = setInterval(function(){
-    var bar = document.querySelector('.progress-fill, [role=progressbar], .progress-bar');
-    var txt = document.body.innerText;
-    // Check for 100% in progress text
-    if(txt.includes('100%') || txt.includes('6/6') || txt.includes('6 من 6')){
-      var b = document.getElementById('cert-banner');
-      if(b){b.style.display='block';clearInterval(check);}
-    }
-  }, 2000);
-  setTimeout(function(){clearInterval(check);}, 30000);
 })();
 </script>
 </body>
