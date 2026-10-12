@@ -309,6 +309,14 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 13,
+    name: 'remove demo testimonials, hide testimonials section',
+    run() {
+      db.prepare("DELETE FROM testimonials WHERE name IN ('يوسف م.','سارة ب.','أمين ر.','خالد ت.','مريم ل.')").run();
+      db.prepare("INSERT INTO settings (key, value) VALUES ('SHOW_TESTIMONIALS', '0') ON CONFLICT(key) DO UPDATE SET value = '0'").run();
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
