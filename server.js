@@ -694,6 +694,29 @@ app.get('/api/progress', requireAuth, (req, res) => {
   const rows = db.prepare('SELECT lesson_id, completed_at FROM progress WHERE user_id = ? ORDER BY completed_at DESC').all(req.session.userId);
   res.json({ completed: rows.map((r) => r.lesson_id), last: rows[0] || null });
 });
+
+// Server-verified certificate: issued only to enrolled students who
+// completed 100% of visible lessons. Each certificate gets a unique code.
+app.get('/api/certificate', requireAuth, (req, res) => {
+  const u = me(req);
+  const total = db.prepare(
+    `SELECT COUNT(*) c FROM lessons l JOIN modules m ON m.id = l.module_id
+     WHERE l.is_visible = 1 AND m.is_visible = 1`).get().c;
+  const done = db.prepare(
+    `SELECT COUNT(*) c FROM progress p
+     JOIN lessons l ON l.id = p.lesson_id JOIN modules m ON m.id = l.module_id
+     WHERE p.user_id = ? AND l.is_visible = 1 AND m.is_visible = 1`).get(u.id).c;
+  const privileged = u.role === 'admin' || u.role === 'super_admin';
+  const eligible = (privileged || u.enrolled) && total > 0 && done >= total;
+  if (!eligible) return res.json({ eligible: false, done, total, enrolled: !!u.enrolled });
+  let cert = db.prepare('SELECT * FROM certificates WHERE user_id = ?').get(u.id);
+  if (!cert) {
+    const code = 'TP-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    db.prepare('INSERT OR IGNORE INTO certificates (user_id, code) VALUES (?, ?)').run(u.id, code);
+    cert = db.prepare('SELECT * FROM certificates WHERE user_id = ?').get(u.id);
+  }
+  res.json({ eligible: true, name: u.name, code: cert.code, issued_at: cert.issued_at, total });
+});
 app.post('/api/progress/complete', requireAuth, (req, res) => {
   const u = me(req);
   if (!u.enrolled && u.role !== 'admin') return res.status(403).json({ error: 'enrollment_required' });
