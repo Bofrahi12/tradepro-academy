@@ -66,7 +66,7 @@
 (async function(){
   await App.renderHeader();
   const s=await App.applySettings();
-  document.getElementById('offer-old').textContent=App.fmtPrice(s,'ORIGINAL_PRICE');
+  const _oo=document.getElementById('offer-old'); const _oldOk=parseFloat(s.ORIGINAL_PRICE)>parseFloat(s.COURSE_PRICE); _oo.textContent=_oldOk?App.fmtPrice(s,'ORIGINAL_PRICE'):''; _oo.style.display=_oldOk?'':'none';
   document.getElementById('offer-price').textContent=App.fmtPrice(s,'COURSE_PRICE');
   try{
     const c=await Store.publicContent();
