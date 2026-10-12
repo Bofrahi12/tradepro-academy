@@ -339,6 +339,18 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 17,
+    name: 'certificates table',
+    run() {
+      db.exec(`CREATE TABLE IF NOT EXISTS certificates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        code TEXT NOT NULL UNIQUE,
+        issued_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
