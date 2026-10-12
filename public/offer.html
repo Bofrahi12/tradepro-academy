@@ -53,6 +53,9 @@
       <div class="offer-error" id="checkout-error" role="alert"></div>
       <p class="offer-note">الدفع يتم عبر بوابة آمنة. Visa وMastercard وPayPal متاحة حسب إعداد حساب الدفع.</p>
     </form>
+    <div style="text-align:center;margin:16px 0 10px;color:var(--muted);font-size:.85rem">— أو ادفع محلياً —</div>
+    <button class="btn btn-ghost btn-lg btn-block" id="manual-btn" type="button">🇲🇦 الدفع عبر تحويل بنكي (المغرب)</button>
+    <div id="manual-result" style="display:none;margin-top:14px;padding:16px;border:1px solid rgba(0,229,160,.35);border-radius:12px;background:rgba(0,229,160,.06)"></div>
     <div class="offer-strip">🔒 لا يتم فتح المحتوى إلا بعد تأكيد الدفع من بوابة الدفع.</div>
   </aside>
 </div></section>
@@ -116,6 +119,26 @@
     }catch(err){
       if(err.message==='stripe_not_configured' && s.PAYMENT_URL){ location.href=s.PAYMENT_URL; return; }
       error.textContent='تعذر تجهيز الدفع حالياً. حاول مرة أخرى أو تواصل معنا.'; btn.disabled=false; btn.textContent='احصل على الدورة الآن';
+    }
+  });
+  document.getElementById('manual-btn').addEventListener('click',async()=>{
+    const email=document.getElementById('buyer-email').value.trim();
+    const box=document.getElementById('manual-result');
+    const mbtn=document.getElementById('manual-btn');
+    if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ App.toast('أدخل بريدك الإلكتروني أولاً في الخانة أعلاه'); document.getElementById('buyer-email').focus(); return; }
+    mbtn.disabled=true; mbtn.textContent='جارٍ إنشاء الطلب...';
+    try{
+      const d=await Store.manualCheckout(email,appliedCoupon);
+      const amt=(d.amount/100).toFixed(2)+' '+String(d.currency||'USD').toUpperCase();
+      box.style.display='block';
+      box.innerHTML='<b style="color:var(--green)">✓ تم إنشاء طلبك رقم #'+d.order_id+'</b><br><span style="color:var(--muted);font-size:.9rem">المبلغ: '+amt+'. أكّد طلبك عبر واتساب لتصلك معلومات التحويل البنكي، وسيُفعَّل حسابك فور تأكيد استلام الدفع.</span>'
+        +(d.whatsapp_url?'<br><a class="btn btn-primary btn-block" style="margin-top:12px" target="_blank" rel="noopener" href="'+d.whatsapp_url+'">💬 تأكيد الطلب عبر واتساب</a>':'');
+      mbtn.textContent='🇲🇦 الدفع عبر تحويل بنكي (المغرب)';
+    }catch(e){
+      box.style.display='block';
+      box.style.borderColor='rgba(255,120,120,.4)'; box.style.background='rgba(255,120,120,.06)';
+      box.innerHTML='<span style="color:#ff9a9a">تعذر إنشاء الطلب. حاول مرة أخرى أو تواصل معنا عبر واتساب.</span>';
+      mbtn.disabled=false; mbtn.textContent='🇲🇦 الدفع عبر تحويل بنكي (المغرب)';
     }
   });
 })();
