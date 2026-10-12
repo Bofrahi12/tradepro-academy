@@ -768,14 +768,20 @@ section{padding:64px 0!important}
       location.href = st.PAYMENT_URL;
       return;
     }
-    // demo / no payment URL yet: simulate enrollment
-    try {
-      const u = await Store.me();
-      if (!u) { location.href = '/register?enroll=1'; return; }
-      await Store.enrollSelf();
-      App.toast('تم تفعيل اشتراكك التجريبي ✓');
-      setTimeout(() => location.href = '/student', 900);
-    } catch (e) { App.toast('حدث خطأ، حاول مجدداً'); }
+    if (cfg.demo) {
+      // static demo only: simulate enrollment
+      try {
+        const u = await Store.me();
+        if (!u) { location.href = '/register?enroll=1'; return; }
+        await Store.enrollSelf();
+        App.toast('تم تفعيل اشتراكك التجريبي ✓');
+        setTimeout(() => location.href = '/student', 900);
+      } catch (e) { App.toast('حدث خطأ، حاول مجدداً'); }
+      return;
+    }
+    // production without Stripe configured: go to the offer page,
+    // where the manual bank-transfer option lives.
+    location.href = '/offer' + (appliedCoupon ? '?coupon=' + encodeURIComponent(appliedCoupon) : '');
   };
 
   App.initReveal(); App.initAccordion();
