@@ -470,6 +470,15 @@ try {
   }
 } catch { /* lessons table may not exist yet in odd states */ }
 
+// ── One-time curriculum finalization (post-seed) ─────────────────────
+// These fixes historically ran on EVERY boot: they deleted non-MP4 lessons,
+// force-retitled modules/lessons and overwrote thumbnails, so anything an
+// admin added or edited could be destroyed by a restart. They are still
+// needed exactly once per database (to finalize a fresh or legacy seed
+// into the 2-module / 6-lesson MP4 curriculum), then never again.
+// Guarded by schema_migrations v18.
+const _finalized18 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(18);
+if (!_finalized18) {
 // Free-preview video: wire the public YouTube video so fresh DB seeds keep it.
 try {
   const row = db.prepare('SELECT id, video_url FROM lessons WHERE is_free_preview = 1 ORDER BY id LIMIT 1').get();
@@ -573,6 +582,9 @@ try {
   const delStmt = db.prepare('DELETE FROM resources WHERE file_url = ?');
   for (const url of staleResourceUrls) delStmt.run(url);
 } catch { /* ignore */ }
+  db.prepare('INSERT INTO schema_migrations (version) VALUES (?)').run(18);
+  console.log('[db] curriculum finalized (one-time, v18)');
+}
 
 function getSettings() {
   const rows = db.prepare('SELECT key, value FROM settings').all();
