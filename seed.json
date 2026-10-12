@@ -200,7 +200,8 @@
     "CURRENCY_ISO": "usd",
     "SUPPORT_WHATSAPP_COUNTRY_CODE": "212",
     "COURSE_HOURS": "",
-    "CONTACT_EMAIL": ""
+    "CONTACT_EMAIL": "",
+    "COMMUNITY_WHATSAPP_URL": "https://chat.whatsapp.com/BacTWuiVvBR6p1FI8AXFrf"
   },
   "testimonials": []
 }
