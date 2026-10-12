@@ -488,7 +488,7 @@ section{padding:64px 0!important}
   <div class="container">
     <h2 class="section-title reveal">كيف تبدأ؟ 3 خطوات فقط</h2>
     <div class="steps-row">
-      <div class="step-card reveal"><div class="step-num">1</div><h4>💳 اشترِ الدورة</h4><p>دفع آمن — بالبطاقة أو عبر تحويل بنكي</p></div>
+      <div class="step-card reveal"><div class="step-num">1</div><h4>🏦 اشترِ الدورة</h4><p>دفع سهل — تحويل بنكي وتأكيد عبر واتساب</p></div>
       <div class="step-card reveal"><div class="step-num">2</div><h4>📧 توصلك رسالة</h4><p>بيانات الدخول + روابط البونص</p></div>
       <div class="step-card reveal"><div class="step-num">3</div><h4>🎬 ابدأ التعلم</h4><p>ادخل لمنصتك وشاهد الدروس فوراً</p></div>
     </div>
@@ -525,7 +525,7 @@ section{padding:64px 0!important}
         </div>
         <div class="coupon-msg" id="coupon-msg"></div>
         <button class="btn btn-primary btn-lg btn-block" id="buy-btn">اشترِ الدورة الآن</button>
-        <p style="color:var(--muted);font-size:.82rem;margin-top:12px">🔒 دفع آمن · وصول فوري بعد إتمام الشراء<br>🛡️ ضمان استرداد كامل لمدة <span class="gdays">7</span> أيام</p>
+        <p style="color:var(--muted);font-size:.82rem;margin-top:12px">🔒 دفع عبر تحويل بنكي · تفعيل سريع بعد تأكيد الدفع<br>🛡️ ضمان استرداد كامل لمدة <span class="gdays">7</span> أيام</p>
       </div>
     </div>
   </div>
@@ -767,15 +767,6 @@ section{padding:64px 0!important}
   document.getElementById('buy-btn').onclick = async () => {
     const st = await Store.settings();
     const cfg = window.APP_CONFIG || {};
-    // Unified secure checkout: the server creates the Stripe session (price + coupon verified server-side).
-    if (cfg.stripe && !cfg.demo) {
-      location.href = '/offer' + (appliedCoupon ? '?coupon=' + encodeURIComponent(appliedCoupon) : '');
-      return;
-    }
-    if (st.PAYMENT_URL && !cfg.demo) {
-      location.href = st.PAYMENT_URL;
-      return;
-    }
     if (cfg.demo) {
       // static demo only: simulate enrollment
       try {
@@ -787,8 +778,7 @@ section{padding:64px 0!important}
       } catch (e) { App.toast('حدث خطأ، حاول مجدداً'); }
       return;
     }
-    // production without Stripe configured: go to the offer page,
-    // where the manual bank-transfer option lives.
+    // Production: the offer page hosts the manual bank-transfer checkout.
     location.href = '/offer' + (appliedCoupon ? '?coupon=' + encodeURIComponent(appliedCoupon) : '');
   };
 
@@ -873,7 +863,7 @@ section{padding:64px 0!important}
     {k:['ضمان','استرجاع','refund'],a:'عندك ضمان استرداد كامل لمدة 14 يوم — بدون أسئلة 🛡️'},
     {k:['مدة','كم درس','دروس'],a:'الدورة فيها 6 دروس فيديو: الشموع، الأطر الزمنية، الدعم والمقاومة، BoS/ChoCh، والأوردر بلوك 📚'},
     {k:['مبتدئ','ابدأ','صفر'],a:'الدورة مصممة للمبتدئين — نبدأ من الصفر خطوة بخطوة 👍'},
-    {k:['دفع','بطاقة','visa'],a:'الدفع آمن عبر Stripe بالبطاقة البنكية (Visa/Mastercard) 🔒'},
+    {k:['دفع','تحويل','واتساب','بنك'],a:'الدفع عبر تحويل بنكي داخل المغرب 🇲🇦 اطلب من صفحة العرض، أكّد طلبك عبر واتساب لتصلك معلومات التحويل، وحسابك يُفعَّل فور تأكيد الدفع 🔒'},
     {k:['شهادة','certificate'],a:'نعم! تحصل على شهادة إتمام باسمك بعد إنهاء الدروس 📜'},
     {k:['بونص','هدايا','bonus'],a:'تحصل على 4 هدايا مجانية بقيمة $127: ملف Excel، Checklist، قالب Trading Plan، ومجتمع WhatsApp 🎁'},
     {k:['واتساب','تواصل','سؤال'],a:'تقدر تتواصل معنا مباشرة على WhatsApp عبر الزر الأخضر 💬'},
