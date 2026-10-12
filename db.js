@@ -317,6 +317,13 @@ const MIGRATIONS = [
     },
   },
   {
+    v: 14,
+    name: 'instructor experience 10 -> 5 years',
+    run() {
+      db.prepare("UPDATE settings SET value = REPLACE(value, '10 سنوات', '5 سنوات') WHERE key IN ('INSTRUCTOR_BIO', 'INSTRUCTOR_EXPERIENCE')").run();
+    },
+  },
+  {
     v: 11,
     name: 'delete YouTube lessons permanently, MP4 only',
     run() {
