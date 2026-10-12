@@ -52,8 +52,8 @@
     </div>
     <ol style="list-style:none;display:grid;gap:8px;margin:16px 0 4px;padding:0;font-size:.92rem;color:var(--muted)">
       <li><b style="color:var(--green)">1.</b> اضغط زر «اطلب الآن» بالأسفل</li>
-      <li><b style="color:var(--green)">2.</b> أكّد طلبك عبر واتساب واستلم معلومات التحويل البنكي</li>
-      <li><b style="color:var(--green)">3.</b> حوّل المبلغ — يُفعَّل حسابك فور تأكيد الدفع</li>
+      <li><b style="color:var(--green)">2.</b> حوّل المبلغ مباشرة إلى الحساب البنكي الذي يظهر لك</li>
+      <li><b style="color:var(--green)">3.</b> أرسل صورة شاشة التحويل عبر واتساب — يُفعَّل حسابك فور التحقق</li>
     </ol>
     <button class="btn btn-primary btn-lg btn-block" id="manual-btn" type="button" style="margin-top:10px">🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي</button>
     <p class="offer-note">دفع محلي بسيط عبر تحويل بنكي داخل المغرب، مع تأكيد سريع عبر واتساب — بدون بطاقة دولية.</p>
@@ -103,8 +103,19 @@
       const d=await Store.manualCheckout(email,appliedCoupon);
       const amt=(d.amount/100).toFixed(2)+' '+String(d.currency||'USD').toUpperCase();
       box.style.display='block';
-      box.innerHTML='<b style="color:var(--green)">✓ تم إنشاء طلبك رقم #'+d.order_id+'</b><br><span style="color:var(--muted);font-size:.9rem">المبلغ: '+amt+'. أكّد طلبك عبر واتساب لتصلك معلومات التحويل البنكي، وسيُفعَّل حسابك فور تأكيد استلام الدفع.</span>'
-        +(d.whatsapp_url?'<br><a class="btn btn-primary btn-block" style="margin-top:12px" target="_blank" rel="noopener" href="'+d.whatsapp_url+'">💬 تأكيد الطلب عبر واتساب</a>':'');
+      const bankBlock='<div style="margin-top:12px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(255,255,255,.04)">'
+        +'<div style="font-weight:800;margin-bottom:8px">🏦 حوّل المبلغ الآن إلى هذا الحساب:</div>'
+        +'<div style="font-size:.92rem;line-height:1.9">المستفيد: <b>MOHSIN DRADRA</b><br>'
+        +'RIB: <span dir="ltr" style="font-weight:700;letter-spacing:.3px">230 640 3713822211016800 92</span> <button type="button" class="btn btn-ghost btn-sm" data-copy="230640371382221101680092" style="margin-inline-start:6px">📋 نسخ</button><br>'
+        +'IBAN: <span dir="ltr" style="font-weight:700;letter-spacing:.3px">MA64 2306 4037 1382 2211 0168 0092</span> <button type="button" class="btn btn-ghost btn-sm" data-copy="MA64230640371382221101680092" style="margin-inline-start:6px">📋 نسخ</button></div>'
+        +'<div style="text-align:center;margin-top:12px"><img src="/images/bank-qr.jpg" alt="رمز QR للحساب البنكي" width="170" height="167" loading="lazy" style="background:#fff;padding:8px;border-radius:12px;max-width:100%"><div style="color:var(--muted);font-size:.8rem;margin-top:6px">أو امسح الرمز من تطبيق بنكك لإضافة المستفيد</div></div>'
+        +'<div style="color:var(--muted);font-size:.85rem;margin-top:10px">💡 اكتب رقم الطلب <b style="color:var(--text)">#'+d.order_id+'</b> في خانة المرجع/الملاحظة عند التحويل إن أمكن.</div>'
+        +'</div>';
+      box.innerHTML='<b style="color:var(--green)">✓ تم إنشاء طلبك رقم #'+d.order_id+'</b><br><span style="color:var(--muted);font-size:.9rem">المبلغ المطلوب: <b style="color:var(--text)">'+amt+'</b></span>'
+        +bankBlock
+        +'<div style="margin-top:12px;font-size:.9rem">بعد إتمام التحويل، أرسل <b>صورة شاشة التحويل</b> عبر واتساب، وسيُفعَّل حسابك فور التحقق منها.</div>'
+        +(d.whatsapp_url?'<a class="btn btn-primary btn-block" style="margin-top:12px" target="_blank" rel="noopener" href="'+d.whatsapp_url+'">💬 إرسال صورة الشاشة عبر واتساب</a>':'');
+      box.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(b.getAttribute('data-copy')); const t=b.textContent; b.textContent='✓ تم النسخ'; setTimeout(()=>b.textContent=t,1600); }catch{ App.toast('انسخ الرقم يدوياً بالضغط المطوّل'); } }));
       mbtn.textContent='🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي';
     }catch(e){
       box.style.display='block';
