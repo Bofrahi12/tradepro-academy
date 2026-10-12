@@ -387,7 +387,7 @@ function seed() {
     seed.bonuses.forEach((b, i) => bonStmt.run(b.title, b.description, i));
     const tesStmt = db.prepare('INSERT INTO testimonials (name, role, text, sort_order, is_visible) VALUES (?, ?, ?, ?, 1)');
     (seed.testimonials || []).forEach((t, i) => tesStmt.run(t.name, t.role, t.text, i));
-    const couStmt = db.prepare('INSERT INTO coupons (code, percent_off, is_active) VALUES (?, ?, 1)');
+    const couStmt = db.prepare('INSERT OR IGNORE INTO coupons (code, percent_off, is_active) VALUES (?, ?, 1)');
     seed.coupons.forEach((c) => couStmt.run(c.code, c.percent_off));
   }
 
