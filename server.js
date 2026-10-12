@@ -1102,6 +1102,28 @@ app.use('/videos/:file', (req, res, next) => {
   return res.status(403).json({ error: 'enrollment_required' });
 });
 
+// Paid bonus files: enrolled students + admins only.
+// The free lead-magnet ebook stays public on purpose.
+app.use('/bonuses/:file', (req, res, next) => {
+  const file = String(req.params.file || '');
+  if (file === 'trading-basics-ebook.pdf') return next();
+  try {
+    const u = me(req);
+    if (u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled)) return next();
+  } catch (e) { /* fall through to 403 */ }
+  return res.status(403).json({ error: 'enrollment_required' });
+});
+
+// Student community link: only revealed to enrolled students / admins.
+app.get('/api/community', requireAuth, (req, res) => {
+  const u = me(req);
+  if (!u || !(u.role === 'admin' || u.role === 'super_admin' || u.enrolled)) {
+    return res.status(403).json({ error: 'enrollment_required' });
+  }
+  const s = getSettings();
+  res.json({ whatsapp_url: s.COMMUNITY_WHATSAPP_URL || null });
+});
+
 // Static assets after page routes (page routes take precedence for /).
 app.use(express.static(path.join(__dirname, 'public')));
 // Public seed data for frontend (testimonials, faqs, bonuses)
