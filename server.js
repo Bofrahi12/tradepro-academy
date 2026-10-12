@@ -525,6 +525,64 @@ app.post('/api/checkout/claim', claimLimiter, async (req, res) => {
   }
 });
 
+// ---------- Manual bank-transfer checkout (e.g. Morocco): pending order,
+// customer confirms via WhatsApp, admin confirms payment -> enrollment. ----
+function fulfillManualOrder(order, actorId) {
+  if (order.status === 'paid') return order;
+  const user = order.user_id ? getUser(order.user_id) : ensureUserForPurchase(order.email);
+  if (!user) throw new Error('user_not_found');
+  if (!order.user_id) db.prepare('UPDATE orders SET user_id = ? WHERE id = ?').run(user.id, order.id);
+  db.prepare("UPDATE orders SET status = 'paid', updated_at = datetime('now') WHERE id = ?").run(order.id);
+  db.prepare(`INSERT INTO payments (order_id, stripe_payment_intent_id, amount, currency, status)
+              VALUES (?, NULL, ?, ?, 'succeeded')`).run(order.id, order.amount, order.currency);
+  db.prepare('INSERT OR IGNORE INTO enrollments (user_id, source) VALUES (?, ?)').run(user.id, 'manual');
+  audit(actorId || user.id, 'order_paid_manual', 'order', order.id, `${order.amount} ${order.currency}`);
+  sendWelcomeEmailFor(user);
+  return db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id);
+}
+
+app.post('/api/checkout/manual', checkoutLimiter, (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  if (!V.validEmail(email)) return res.status(400).json({ error: 'valid_email_required' });
+  const p = getPricing(req.body?.coupon_code);
+  if (p.base < 50) return res.status(400).json({ error: 'invalid_course_price' });
+  const s = getSettings();
+  const user = ensureUserForPurchase(email);
+  const r = db.prepare(
+    `INSERT INTO orders (user_id, email, base_amount, discount_amount, amount, currency, coupon_code, status, source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'manual')`
+  ).run(user.id, email, p.base, p.discount, p.amount, p.currency, p.couponCode);
+  const orderId = r.lastInsertRowid;
+  const amountDisplay = `${(p.amount / 100).toFixed(2)} ${String(p.currency).toUpperCase()}`;
+  const msg = `مرحباً، أنا ${email}. طلبت دورة ${s.COURSE_NAME || 'TradePro Academy'} (طلب رقم #${orderId}، المبلغ ${amountDisplay}) وسأدفع عبر تحويل بنكي. المرجو إرسال معلومات التحويل البنكي.`;
+  res.json({ ok: true, order_id: orderId, amount: p.amount, currency: p.currency, whatsapp_url: waLink(s, msg) });
+});
+
+app.post('/api/admin/orders/:id/confirm-payment', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'not_found' });
+  if (order.status === 'paid') return res.json({ ok: true, order, already: true });
+  if (order.status !== 'pending') return res.status(409).json({ error: 'order_not_pending' });
+  try {
+    const u = me(req);
+    const updated = fulfillManualOrder(order, u && u.id);
+    res.json({ ok: true, order: updated });
+  } catch (e) {
+    console.error('[manual confirm]', e.message);
+    res.status(500).json({ error: 'confirm_failed' });
+  }
+});
+
+app.post('/api/admin/orders/:id/cancel', requireAdmin, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'not_found' });
+  if (order.status !== 'pending') return res.status(409).json({ error: 'order_not_pending' });
+  setOrderStatus(order.id, 'cancelled');
+  const u = me(req);
+  audit(u && u.id, 'order_cancelled', 'order', order.id, 'manual');
+  res.json({ ok: true });
+});
+
 // ---------- auth ----------
 app.post('/api/auth/register', registerLimiter, (req, res) => {
   const name = V.cleanText(req.body?.name, 80);
