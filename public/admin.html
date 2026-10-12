@@ -194,8 +194,8 @@ async function renderOrders() {
       <button class="btn btn-primary btn-sm" id="orders-search">بحث</button>
     </div>
     <div class="table-wrap"><table class="admin-table">
-      <tr><th>#</th><th>العميل</th><th>البريد</th><th>المبلغ</th><th>الخصم</th><th>الكوبون</th><th>الحالة</th><th>المصدر</th><th>التاريخ</th></tr>
-      <tbody id="orders-rows"><tr><td colspan="9" style="text-align:center;color:var(--muted)">جارٍ التحميل...</td></tr></tbody>
+      <tr><th>#</th><th>العميل</th><th>البريد</th><th>المبلغ</th><th>الخصم</th><th>الكوبون</th><th>الحالة</th><th>المصدر</th><th>التاريخ</th><th>إجراء</th></tr>
+      <tbody id="orders-rows"><tr><td colspan="10" style="text-align:center;color:var(--muted)">جارٍ التحميل...</td></tr></tbody>
     </table></div></div>`;
   const load = async () => {
     const q = document.getElementById('orders-q').value.trim();
@@ -210,8 +210,23 @@ async function renderOrders() {
         <td dir="ltr">${E(o.coupon_code || '—')}</td>
         <td>${ORDER_STATUS_AR[o.status] || E(o.status)}</td>
         <td style="color:var(--muted);font-size:.8rem">${E(o.source || '')}</td>
-        <td style="color:var(--muted);font-size:.8rem">${E((o.created_at || '').slice(0, 16).replace('T', ' '))}</td></tr>`).join('')
-        || '<tr><td colspan="9" style="text-align:center;color:var(--muted)">لا توجد طلبات مطابقة</td></tr>';
+        <td style="color:var(--muted);font-size:.8rem">${E((o.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+        <td>${o.status === 'pending' && o.source === 'manual'
+          ? `<button class="btn btn-primary btn-sm" data-confirm="${o.id}">✓ تأكيد الدفع</button> <button class="btn btn-ghost btn-sm" data-cancel="${o.id}">إلغاء</button>`
+          : '<span style="color:var(--muted)">—</span>'}</td></tr>`).join('')
+        || '<tr><td colspan="10" style="text-align:center;color:var(--muted)">لا توجد طلبات مطابقة</td></tr>';
+      document.querySelectorAll('[data-confirm]').forEach((b) => b.onclick = async () => {
+        if (!confirm('تأكيد استلام الدفع لهذا الطلب؟ سيُفعَّل حساب الطالب مباشرة.')) return;
+        b.disabled = true;
+        try { await Store.adminConfirmOrder(b.dataset.confirm); App.toast('تم تأكيد الدفع وتفعيل الطالب ✓'); load(); }
+        catch (e) { App.toast('تعذر التأكيد'); b.disabled = false; }
+      });
+      document.querySelectorAll('[data-cancel]').forEach((b) => b.onclick = async () => {
+        if (!confirm('إلغاء هذا الطلب المعلق؟')) return;
+        b.disabled = true;
+        try { await Store.adminCancelOrder(b.dataset.cancel); App.toast('تم إلغاء الطلب'); load(); }
+        catch (e) { App.toast('تعذر الإلغاء'); b.disabled = false; }
+      });
     } catch (e) { App.toast('تعذر تحميل الطلبات'); }
   };
   document.getElementById('orders-search').onclick = load;
