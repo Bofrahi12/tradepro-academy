@@ -91,9 +91,18 @@ function openModal(title, fields, onSave) {
     if (f.type === 'textarea') input = `<textarea id="mf-${i}" rows="4">${E(v)}</textarea>`;
     else if (f.type === 'select') input = `<select id="mf-${i}">${f.options.map((o) => `<option value="${o[0]}" ${String(v) === String(o[0]) ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
     else if (f.type === 'checkbox') input = `<input type="checkbox" id="mf-${i}" ${v ? 'checked' : ''} style="width:auto;transform:scale(1.4)">`;
+    else if (f.type === 'videoupload') input = `<input type="file" id="mf-${i}" accept=".mp4,.webm,video/mp4,video/webm"><div id="mf-${i}-prog" style="display:none;margin-top:8px"><div style="height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden"><div id="mf-${i}-bar" style="height:100%;width:0%;background:#f5c518;transition:width .2s"></div></div><small id="mf-${i}-txt" style="color:var(--muted)"></small></div>`;
     else input = `<input type="${f.type || 'text'}" id="mf-${i}" value="${E(v)}" ${f.dir ? `dir="${f.dir}"` : ''}>`;
     return `<div class="field"><label>${f.label}${f.hint ? ` <small style="color:var(--muted)">${f.hint}</small>` : ''}</label>${input}</div>`;
   }).join('');
+  fields.forEach((f, i) => {
+    if (f.type !== 'videoupload') return;
+    const fileInput = document.getElementById('mf-' + i);
+    if (fileInput) fileInput.addEventListener('change', () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (file) uploadAdminVideo(file, i, f);
+    });
+  });
   const back = document.getElementById('modal-back');
   back.classList.add('show');
   back.setAttribute('role', 'dialog');
@@ -102,6 +111,7 @@ function openModal(title, fields, onSave) {
   document.getElementById('modal-save').onclick = async () => {
     const vals = fields.map((f, i) => {
       const el = document.getElementById('mf-' + i);
+      if (f.type === 'videoupload') return '';
       if (f.type === 'checkbox') return el.checked ? 1 : 0;
       if (f.type === 'number') return parseInt(el.value || '0', 10);
       return el.value;
@@ -112,6 +122,50 @@ function openModal(title, fields, onSave) {
   // focus first field; trap Tab inside modal; close on Escape
   const first = wrap.querySelector('input, select, textarea');
   if (first) first.focus();
+}
+
+// Upload a video file to the platform (persistent storage), then fill the
+// lesson's video_url field + provider so saving the lesson attaches it.
+function uploadAdminVideo(file, idx, field) {
+  const prog = document.getElementById('mf-' + idx + '-prog');
+  const bar = document.getElementById('mf-' + idx + '-bar');
+  const txt = document.getElementById('mf-' + idx + '-txt');
+  if (prog) prog.style.display = 'block';
+  if (bar) bar.style.width = '0%';
+  if (txt) txt.textContent = '⏳ جارٍ رفع: ' + file.name;
+  const fd = new FormData();
+  fd.append('video', file);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/admin/videos/upload');
+  const m = document.cookie.match(/(?:^|;\s*)tpa_csrf=([^;]*)/);
+  xhr.setRequestHeader('x-csrf-token', m ? decodeURIComponent(m[1]) : '');
+  xhr.upload.onprogress = (ev) => {
+    if (!ev.lengthComputable) return;
+    const pct = Math.round((ev.loaded / ev.total) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = '⏳ جارٍ الرفع… ' + pct + '%';
+  };
+  xhr.onload = () => {
+    let data = {};
+    try { data = JSON.parse(xhr.responseText || '{}'); } catch (e) {}
+    if (xhr.status >= 200 && xhr.status < 300 && data.path) {
+      const urlInput = document.getElementById(field.targetId);
+      if (urlInput) urlInput.value = data.path;
+      const prov = document.getElementById(field.providerId);
+      if (prov) prov.value = 'mp4';
+      if (bar) bar.style.width = '100%';
+      if (txt) txt.textContent = '✅ تم الرفع: ' + data.path + ' — اضغط «حفظ» لربطه بالدرس';
+      App.toast('تم رفع الفيديو ✓');
+    } else {
+      if (txt) txt.textContent = '❌ فشل الرفع: ' + (data.error || xhr.status);
+      App.toast('فشل رفع الفيديو', true);
+    }
+  };
+  xhr.onerror = () => {
+    if (txt) txt.textContent = '❌ فشل الرفع (خطأ في الاتصال)';
+    App.toast('فشل رفع الفيديو', true);
+  };
+  xhr.send(fd);
 }
 function closeModal() {
   document.getElementById('modal-back').classList.remove('show');
@@ -321,7 +375,52 @@ async function renderVideos() {
             </div>`).join('')}
         </div>`;
       }).join('')}
+    </div>
+    <div class="card" style="margin-top:18px;padding:16px">
+      <h4 style="margin:0 0 6px">📁 الفيديوهات المرفوعة على المنصة</h4>
+      <p style="color:var(--muted);margin:0 0 8px;font-size:.9rem">ملفات محفوظة على المنصة نفسها (تبقى حتى بعد تحديث الموقع). للرفع: افتح إضافة/تعديل درس واختر «📤 أو ارفع فيديو من جهازك».</p>
+      <div id="uploaded-videos"><span style="color:var(--muted)">جارٍ التحميل…</span></div>
     </div>`;
+  loadUploadedVideos();
+}
+
+async function loadUploadedVideos() {
+  const box = document.getElementById('uploaded-videos');
+  if (!box) return;
+  const fmtSize = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  try {
+    const r = await fetch('/api/admin/videos', { credentials: 'same-origin' });
+    const list = await r.json();
+    if (!Array.isArray(list) || !list.length) {
+      box.innerHTML = '<span style="color:var(--muted)">لا توجد فيديوهات مرفوعة بعد.</span>';
+      return;
+    }
+    box.innerHTML = list.map((f) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07)">
+        <div style="min-width:0">
+          <div dir="ltr" style="text-align:left;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(f.name)}</div>
+          <small style="color:var(--muted)">${fmtSize(f.size)} · ${E(String(f.created || '').slice(0, 10))}${f.referenced ? ' · 🔗 مرتبط بدرس' : ''}</small>
+        </div>
+        <button class="btn btn-sm" data-del-upload="${E(f.name)}" style="color:#ff9a9a;min-height:40px">🗑️ حذف</button>
+      </div>`).join('');
+    box.querySelectorAll('[data-del-upload]').forEach((btn) => btn.onclick = async () => {
+      const name = btn.dataset.delUpload;
+      if (!confirm('حذف هذا الفيديو نهائياً من المنصة؟')) return;
+      try {
+        const m = document.cookie.match(/(?:^|;\s*)tpa_csrf=([^;]*)/);
+        const rr = await fetch('/api/admin/videos/' + encodeURIComponent(name), {
+          method: 'DELETE', credentials: 'same-origin',
+          headers: { 'x-csrf-token': m ? decodeURIComponent(m[1]) : '' },
+        });
+        const d = await rr.json().catch(() => ({}));
+        if (!rr.ok) throw new Error(d.error || 'delete_failed');
+        App.toast(d.referenced ? 'تم الحذف — تنبيه: كان مرتبطاً بدرس، حدّث رابط ذلك الدرس' : 'تم حذف الفيديو ✓');
+        loadUploadedVideos();
+      } catch (e) { App.toast('تعذّر حذف الفيديو', true); }
+    });
+  } catch (e) {
+    box.innerHTML = '<span style="color:#ff6b6b">تعذّر تحميل الفيديوهات المرفوعة</span>';
+  }
 }
 
 async function renderContent() {
@@ -420,13 +519,13 @@ async function renderContent() {
       const mid = +get('ladd');
       const count = lessons.filter((l) => l.module_id === mid).length;
       openModal('إضافة درس جديد', lessonFields({}), async (v) => {
-        await Store.adminCreate('lessons', { module_id: mid, title: v[0], video_url: v[1], thumbnail: v[2], description: v[3], duration: v[4], provider: v[5], sort_order: count, is_visible: v[6], is_free_preview: v[7] });
+        await Store.adminCreate('lessons', { module_id: mid, title: v[0], video_url: v[1], thumbnail: v[3], description: v[4], duration: v[5], provider: v[6], sort_order: count, is_visible: v[7], is_free_preview: v[8] });
         App.toast('تمت إضافة الدرس ✓'); renderContent();
       });
     } else if (get('ledit')) {
       const l = lessons.find((x) => x.id === +get('ledit'));
       openModal('تعديل الدرس', lessonFields(l), async (v) => {
-        await Store.adminUpdate('lessons', l.id, { title: v[0], video_url: v[1], thumbnail: v[2], description: v[3], duration: v[4], provider: v[5], is_visible: v[6], is_free_preview: v[7] });
+        await Store.adminUpdate('lessons', l.id, { title: v[0], video_url: v[1], thumbnail: v[3], description: v[4], duration: v[5], provider: v[6], is_visible: v[7], is_free_preview: v[8] });
         App.toast('تم الحفظ ✓'); renderContent();
       });
     } else if (get('lvis')) {
@@ -451,6 +550,7 @@ function lessonFields(l) {
   return [
     { label: 'عنوان الدرس', value: l.title || '' },
     { label: 'رابط الفيديو', value: l.video_url || '', dir: 'ltr', hint: 'رابط YouTube / Vimeo / Cloudflare / MP4' },
+    { label: '📤 أو ارفع فيديو من جهازك', type: 'videoupload', targetId: 'mf-1', providerId: 'mf-6', hint: 'MP4 أو WebM — حتى 1GB — يُحفظ على المنصة' },
     { label: 'رابط الصورة المصغرة (Thumbnail)', value: l.thumbnail || '', dir: 'ltr' },
     { label: 'وصف الدرس', type: 'textarea', value: l.description || '' },
     { label: 'المدة', value: l.duration || '', hint: 'مثال: 12:30' },
