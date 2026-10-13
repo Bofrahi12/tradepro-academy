@@ -52,7 +52,7 @@
     </div>
     <ol style="list-style:none;display:grid;gap:8px;margin:16px 0 4px;padding:0;font-size:.92rem;color:var(--muted)">
       <li><b style="color:var(--green)">1.</b> اضغط زر «اطلب الآن» بالأسفل</li>
-      <li><b style="color:var(--green)">2.</b> حوّل المبلغ مباشرة إلى الحساب البنكي الذي يظهر لك</li>
+      <li><b style="color:var(--green)">2.</b> حوّل المبلغ مباشرة — تحويل بنكي أو USDT — كما يظهر لك بعد الطلب</li>
       <li><b style="color:var(--green)">3.</b> أرسل صورة شاشة التحويل عبر واتساب — يُفعَّل حسابك فور التحقق</li>
     </ol>
     <button class="btn btn-primary btn-lg btn-block" id="manual-btn" type="button" style="margin-top:10px">🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي</button>
@@ -103,7 +103,7 @@
       const d=await Store.manualCheckout(email,appliedCoupon);
       const amt=(d.amount/100).toFixed(2)+' '+String(d.currency||'USD').toUpperCase();
       box.style.display='block';
-      const bankBlock='<div style="margin-top:12px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(255,255,255,.04)">'
+      const bankBlock='<div id="pay-bank" style="margin-top:12px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(255,255,255,.04)">'
         +'<div style="font-weight:800;margin-bottom:8px">🏦 حوّل المبلغ الآن إلى هذا الحساب:</div>'
         +'<div style="font-size:.92rem;line-height:1.9">المستفيد: <b>MOHSIN DRADRA</b><br>'
         +'RIB: <span dir="ltr" style="font-weight:700;letter-spacing:.3px">230 640 3713822211016800 92</span> <button type="button" class="btn btn-ghost btn-sm" data-copy="230640371382221101680092" style="margin-inline-start:6px">📋 نسخ</button><br>'
@@ -112,9 +112,18 @@
         +'<div style="color:var(--muted);font-size:.85rem;margin-top:10px">💡 اكتب رقم الطلب <b style="color:var(--text)">#'+d.order_id+'</b> في خانة المرجع/الملاحظة عند التحويل إن أمكن.</div>'
         +'</div>';
       box.innerHTML='<b style="color:var(--green)">✓ تم إنشاء طلبك رقم #'+d.order_id+'</b><br><span style="color:var(--muted);font-size:.9rem">المبلغ المطلوب: <b style="color:var(--text)">'+amt+'</b></span>'
+        +'<div style="display:flex;gap:8px;margin-top:14px"><button type="button" class="btn btn-primary pay-tab" data-tab="bank" style="flex:1">\u{1F3E6} تحويل بنكي</button><button type="button" class="btn btn-ghost pay-tab" data-tab="crypto" style="flex:1">₿ USDT كريبتو</button></div>'
         +bankBlock
+        +'<div id="pay-crypto" style="display:none;margin-top:12px;padding:14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(255,255,255,.04)">'
+        +'<div style="font-weight:800;margin-bottom:8px">₿ ادفع بـ USDT — شبكة BNB Smart Chain (BEP20) فقط:</div>'
+        +'<div style="font-size:.92rem;line-height:1.9">المبلغ: <b>'+(d.amount/100).toFixed(2)+' USDT</b> (بالضبط)<br>'
+        +'العنوان: <span dir="ltr" style="font-weight:700;word-break:break-all">0x6aba15b9bc2e24f4d3e2814fcb2d32d131dbb3fd</span> <button type="button" class="btn btn-ghost btn-sm" data-copy="0x6aba15b9bc2e24f4d3e2814fcb2d32d131dbb3fd" style="margin-inline-start:6px">📋 نسخ</button></div>'
+        +'<div style="text-align:center;margin-top:12px"><img src="/images/usdt-qr.png" alt="رمز QR لعنوان USDT" width="170" height="170" loading="lazy" style="background:#fff;padding:8px;border-radius:12px;max-width:100%"><div style="color:var(--muted);font-size:.8rem;margin-top:6px">امسح الرمز من محفظتك أو تطبيق المنصة</div></div>'
+        +'<div style="color:#ffb3b3;font-size:.85rem;margin-top:10px">⚠️ أرسل على شبكة <b>BEP20</b> فقط — أي تحويل على شبكة أخرى (TRC20/ERC20...) لن يصل ولن يُسترد.</div>'
+        +'</div>'
         +'<div style="margin-top:12px;font-size:.9rem">بعد إتمام التحويل، أرسل <b>صورة شاشة التحويل</b> عبر واتساب، وسيُفعَّل حسابك فور التحقق منها.</div>'
         +(d.whatsapp_url?'<a class="btn btn-primary btn-block" style="margin-top:12px" target="_blank" rel="noopener" href="'+d.whatsapp_url+'">💬 إرسال صورة الشاشة عبر واتساب</a>':'');
+      box.querySelectorAll('.pay-tab').forEach(t=>t.addEventListener('click',()=>{ const c=t.getAttribute('data-tab')==='crypto'; document.getElementById('pay-crypto').style.display=c?'block':'none'; document.getElementById('pay-bank').style.display=c?'none':'block'; box.querySelectorAll('.pay-tab').forEach(x=>{ const on=x===t; x.classList.toggle('btn-primary',on); x.classList.toggle('btn-ghost',!on); }); }));
       box.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(b.getAttribute('data-copy')); const t=b.textContent; b.textContent='✓ تم النسخ'; setTimeout(()=>b.textContent=t,1600); }catch{ App.toast('انسخ الرقم يدوياً بالضغط المطوّل'); } }));
       mbtn.textContent='🇲🇦 اطلب الآن — الدفع عبر تحويل بنكي';
     }catch(e){
