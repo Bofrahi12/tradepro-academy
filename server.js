@@ -51,6 +51,12 @@ if (NODE_ENV === 'test') app.locals.testHooks = testHooks;
 
 // ---------- middleware ----------
 app.set('trust proxy', TRUST_PROXY ? 1 : 0); // never trust X-Forwarded-For unless behind a known proxy
+// Legacy-host redirect: when REDIRECT_TO is set (e.g. on the old Render host),
+// send every visitor to the canonical site so no sale lands on a stale copy.
+if (process.env.REDIRECT_TO) {
+  const REDIRECT_TARGET = process.env.REDIRECT_TO.replace(/\/$/, '');
+  app.use((req, res) => res.redirect(302, REDIRECT_TARGET + req.originalUrl));
+}
 app.use(securityHeaders({ ga4: !!GA4_ID, metaPixel: !!META_PIXEL_ID }));
 app.use(session({
   secret: SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
