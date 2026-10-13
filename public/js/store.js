@@ -182,6 +182,21 @@
       demoSave(s); return { ok: true };
     },
     async adminRole(id, role) { const s = await demoSeed(); Demo._admin(s); s.users.find(u => u.id === +id).role = role; demoSave(s); return { ok: true }; },
+    async adminSettings() { const s = await demoSeed(); Demo._admin(s); return { ...s.settings }; },
+    async adminDeleteUser(id) {
+      const s = await demoSeed(); Demo._admin(s);
+      const meU = demoMe(s);
+      const t = s.users.find(u => u.id === +id);
+      if (!t) throw Object.assign(new Error('not_found'), { status: 404, code: 'not_found' });
+      if (meU && meU.id === t.id) throw Object.assign(new Error('cannot_delete_self'), { status: 400, code: 'cannot_delete_self' });
+      if (t.role === 'super_admin') {
+        if (!meU || meU.role !== 'super_admin') throw Object.assign(new Error('super_admin_protected'), { status: 403, code: 'super_admin_protected' });
+        if (s.users.filter(u => u.role === 'super_admin').length <= 1) throw Object.assign(new Error('cannot_remove_last_super_admin'), { status: 400, code: 'cannot_remove_last_super_admin' });
+      }
+      s.users = s.users.filter(u => u.id !== +id);
+      s.enrollments = s.enrollments.filter(e => e.user_id !== +id);
+      demoSave(s); return { ok: true };
+    },
   };
 
   /* ---------------- public Store ---------------- */
@@ -217,6 +232,8 @@
     adminUsers: () => CFG.demo ? Demo.adminUsers() : apiFetch('/admin/users'),
     adminEnroll: (id, on) => CFG.demo ? Demo.adminEnroll(id, on) : apiFetch(`/admin/users/${id}/${on ? 'enroll' : 'unenroll'}`, { method: 'POST' }),
     adminRole: (id, r) => CFG.demo ? Demo.adminRole(id, r) : apiFetch(`/admin/users/${id}/role`, { method: 'POST', body: JSON.stringify({ role: r }) }),
+    adminSettings: () => CFG.demo ? Demo.adminSettings() : apiFetch('/admin/settings'),
+    adminDeleteUser: (id) => CFG.demo ? Demo.adminDeleteUser(id) : apiFetch('/admin/users/' + id, { method: 'DELETE' }),
     adminOrders: (params) => CFG.demo ? Promise.resolve([]) : apiFetch('/admin/orders?' + new URLSearchParams(params || {}).toString()),
     adminConfirmOrder: (id) => apiFetch('/admin/orders/' + id + '/confirm-payment', { method: 'POST', body: '{}' }),
     adminCancelOrder: (id) => apiFetch('/admin/orders/' + id + '/cancel', { method: 'POST', body: '{}' }),
