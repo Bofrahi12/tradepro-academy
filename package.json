@@ -3,9 +3,10 @@
     "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "multer": "2.4.0",
     "nodemailer": "^10.0.16"
   },
-  "description": "TradePro Academy \u2014 Arabic trading course platform (landing + student portal + admin)",
+  "description": "TradePro Academy — Arabic trading course platform (landing + student portal + admin)",
   "engines": {
     "node": ">=22"
   },
