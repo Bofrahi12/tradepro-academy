@@ -984,6 +984,7 @@ const SETTING_KEYS = {
   PODCAST_DESCRIPTION: (v) => V.cleanText(v, 1000),
   PODCAST_EMBED_URL: (v) => { const s = String(v || '').trim(); return !s || V.isSafeUrl(s, { allowRelative: false }) ? s : null; },
   PODCAST_PROVIDER: (v) => (V.isProvider(v) ? v : null),
+  COMMUNITY_WHATSAPP_URL: (v) => { const s = String(v || '').trim(); return !s || V.isSafeUrl(s, { allowRelative: false }) ? s : null; },
   SUPPORT_WHATSAPP: (v) => { const s = String(v || '').replace(/[()\s-]/g, ''); return !s || /^[+0-9][0-9]{5,18}$/.test(s) ? s : null; },
   SUPPORT_WHATSAPP_COUNTRY_CODE: (v) => { const s = String(v || '').replace(/\D/g, ''); return !s || /^\d{1,4}$/.test(s) ? s : null; },
   UMAMI_WEBSITE_ID: (v) => V.cleanText(v, 80),
@@ -992,6 +993,7 @@ const SETTING_KEYS = {
   COURSE_HOURS: (v) => { const s = String(v || '').trim(); return !s || /^\d{1,4}$/.test(s) ? s : null; },
   CONTACT_EMAIL: (v) => { const s = String(v || '').trim(); return !s || V.validEmail(s) ? s : null; },
 };
+app.get('/api/admin/settings', requireAdmin, (req, res) => res.json(getSettings()));
 app.put('/api/admin/settings', requireAdmin, (req, res) => {
   const body = req.body || {};
   const bad = [];
@@ -1036,15 +1038,39 @@ app.post('/api/admin/users/:id/role', requireAdmin, (req, res) => {
   const target = Number(req.params.id);
   const role = req.body?.role;
   if (!V.isId(target) || !V.isRole(role)) return res.status(400).json({ error: 'invalid_role' });
-  if (target === req.user.id && role !== 'admin') return res.status(400).json({ error: 'cannot_demote_self' });
   const t = db.prepare('SELECT role FROM users WHERE id = ?').get(target);
   if (!t) return res.status(404).json({ error: 'not_found' });
+  // super_admin accounts are protected: only another super_admin may touch them.
+  if (t.role === 'super_admin' && req.user.role !== 'super_admin') {
+    return res.status(403).json({ error: 'super_admin_protected' });
+  }
+  if (target === req.user.id && role !== t.role) return res.status(400).json({ error: 'cannot_demote_self' });
+  if (t.role === 'super_admin' && role !== 'super_admin') {
+    const supers = db.prepare("SELECT COUNT(*) c FROM users WHERE role = 'super_admin'").get().c;
+    if (supers <= 1) return res.status(400).json({ error: 'cannot_remove_last_super_admin' });
+  }
   if (t.role === 'admin' && role !== 'admin') {
     const admins = db.prepare("SELECT COUNT(*) c FROM users WHERE role = 'admin'").get().c;
     if (admins <= 1) return res.status(400).json({ error: 'cannot_remove_last_admin' });
   }
   db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, target);
   audit(req.user.id, 'role_changed', 'user', target, `${t.role} -> ${role}`);
+  res.json({ ok: true });
+});
+app.delete('/api/admin/users/:id', requireAdmin, (req, res) => {
+  const target = Number(req.params.id);
+  if (!V.isId(target)) return res.status(404).json({ error: 'not_found' });
+  const t = db.prepare('SELECT email, role FROM users WHERE id = ?').get(target);
+  if (!t) return res.status(404).json({ error: 'not_found' });
+  if (target === req.user.id) return res.status(400).json({ error: 'cannot_delete_self' });
+  if (t.role === 'super_admin') {
+    // Only a super_admin may delete another super_admin, and never the last one.
+    if (req.user.role !== 'super_admin') return res.status(403).json({ error: 'super_admin_protected' });
+    const supers = db.prepare("SELECT COUNT(*) c FROM users WHERE role = 'super_admin'").get().c;
+    if (supers <= 1) return res.status(400).json({ error: 'cannot_remove_last_super_admin' });
+  }
+  db.prepare('DELETE FROM users WHERE id = ?').run(target);
+  audit(req.user.id, 'user_deleted', 'user', target, t.email);
   res.json({ ok: true });
 });
 
