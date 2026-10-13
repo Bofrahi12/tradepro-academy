@@ -1,0 +1,6 @@
+node_modules
+.git
+tradepro.db
+tradepro.db-shm
+tradepro.db-wal
+*.log
