@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { db, getSettings } = require('./db');
+const { db, getSettings, DB_PATH } = require('./db');
+const multer = require('multer');
 const V = require('./lib/validate');
 const { getPricing } = require('./lib/pricing');
 const mailer = require('./lib/mailer');
@@ -27,6 +28,29 @@ const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const GA4_ID = process.env.GA4_MEASUREMENT_ID || '';
 const META_PIXEL_ID = process.env.META_PIXEL_ID || '';
 const PROTECT_MEDIA = process.env.PROTECT_MEDIA !== 'false';
+
+// ---------- admin video uploads ----------
+// Uploaded lesson videos live OUTSIDE public/ on the persistent disk (next to
+// the SQLite DB on the Railway volume) so they survive redeploys.
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(path.dirname(DB_PATH), 'videos');
+try { fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch (e) { console.error('[uploads] mkdir failed:', e.message); }
+const UPLOAD_EXTS = { '.mp4': 'video/mp4', '.webm': 'video/webm' };
+const uploadNameOk = (name) => /^[A-Za-z0-9][A-Za-z0-9._-]*\.(mp4|webm)$/i.test(name) && !name.includes('..');
+const videoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString('hex') + path.extname(file.originalname || '').toLowerCase()),
+  }),
+  limits: { fileSize: 1024 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const okType = !!UPLOAD_EXTS[ext] && (file.mimetype === UPLOAD_EXTS[ext] || file.mimetype === 'application/octet-stream');
+    if (okType) return cb(null, true);
+    cb(Object.assign(new Error('invalid_video_type'), { code: 'INVALID_VIDEO_TYPE' }));
+  },
+});
 const MEDIA_SECRET = process.env.MEDIA_SIGNING_SECRET || SESSION_SECRET || 'media-dev-secret';
 
 // ---------- production guards ----------
@@ -361,7 +385,10 @@ function mediaToken(lessonId, ttlSec = 7200) {
 }
 function protectMediaUrl(l, u) {
   if (!PROTECT_MEDIA || l.provider !== 'mp4' || !l.video_url) return l.video_url;
-  if (u && (u.role === 'admin' || u.role === 'super_admin')) return l.video_url;
+  if (u && (u.role === 'admin' || u.role === 'super_admin')) {
+    const v = String(l.video_url);
+    return v.startsWith('uploads/') ? '/' + v : v;
+  }
   const { token, exp } = mediaToken(l.id);
   return `/api/media/lesson/${l.id}?token=${token}&exp=${exp}`;
 }
@@ -378,12 +405,20 @@ app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
   }
   // Stream the file directly (never expose the raw public path).
   const rel = String(l.video_url).replace(/^\/+/, '');
-  const filePath = path.join(__dirname, 'public', rel);
-  if (!filePath.startsWith(path.join(__dirname, 'public') + path.sep)) return res.status(403).json({ error: 'forbidden' });
+  let filePath;
+  if (rel.startsWith('uploads/')) {
+    // Admin-uploaded video: resolve inside UPLOAD_DIR (persistent disk).
+    const name = path.basename(rel);
+    if (!uploadNameOk(name)) return res.status(403).json({ error: 'forbidden' });
+    filePath = path.join(UPLOAD_DIR, name);
+  } else {
+    filePath = path.join(__dirname, 'public', rel);
+    if (!filePath.startsWith(path.join(__dirname, 'public') + path.sep)) return res.status(403).json({ error: 'forbidden' });
+  }
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) return res.status(404).json({ error: 'not_found' });
     const range = req.headers.range;
-    const contentType = 'video/mp4';
+    const contentType = path.extname(filePath).toLowerCase() === '.webm' ? 'video/webm' : 'video/mp4';
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
@@ -960,6 +995,54 @@ function registerCrud(base) {
 }
 Object.keys(CRUD_SCHEMAS).forEach(registerCrud);
 
+// ---- admin video uploads (files on persistent disk, served protected) ----
+const lessonRefsUpload = (name) => db.prepare(
+  'SELECT COUNT(*) c FROM lessons WHERE video_url = ? OR video_url = ?'
+).get('uploads/' + name, '/uploads/' + name).c > 0;
+app.post('/api/admin/videos/upload', requireAdmin, (req, res) => {
+  videoUpload.single('video')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'file_too_large' });
+      if (err.code === 'INVALID_VIDEO_TYPE') return res.status(400).json({ error: 'invalid_video_type' });
+      return res.status(400).json({ error: 'upload_failed' });
+    }
+    if (!req.file) return res.status(400).json({ error: 'no_file' });
+    audit(req.user.id, 'video_uploaded', 'videos', req.file.filename, `${req.file.size} bytes`);
+    res.json({ ok: true, path: 'uploads/' + req.file.filename, size: req.file.size });
+  });
+});
+app.get('/api/admin/videos', requireAdmin, (req, res) => {
+  fs.readdir(UPLOAD_DIR, (err, files) => {
+    if (err) return res.json([]);
+    const names = files.filter(uploadNameOk);
+    if (!names.length) return res.json([]);
+    const out = [];
+    let pending = names.length;
+    names.forEach((name) => {
+      fs.stat(path.join(UPLOAD_DIR, name), (e2, st) => {
+        if (!e2 && st.isFile()) {
+          out.push({
+            name, path: 'uploads/' + name, size: st.size,
+            created: (st.birthtime || st.mtime).toISOString(),
+            referenced: lessonRefsUpload(name),
+          });
+        }
+        if (--pending === 0) res.json(out.sort((a, b) => (a.created < b.created ? 1 : -1)));
+      });
+    });
+  });
+});
+app.delete('/api/admin/videos/:name', requireAdmin, (req, res) => {
+  const name = String(req.params.name || '');
+  if (!uploadNameOk(name) || path.basename(name) !== name) return res.status(400).json({ error: 'invalid_name' });
+  const referenced = lessonRefsUpload(name);
+  fs.unlink(path.join(UPLOAD_DIR, name), (err) => {
+    if (err) return res.status(404).json({ error: 'not_found' });
+    audit(req.user.id, 'video_deleted', 'videos', name, referenced ? 'referenced_by_lesson' : '');
+    res.json({ ok: true, referenced });
+  });
+});
+
 // ---- settings (whitelisted keys only) ----
 const SETTING_KEYS = {
   COURSE_NAME: (v) => V.cleanText(v, 120),
@@ -1155,6 +1238,22 @@ app.use('/videos/:file', (req, res, next) => {
     if (u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled)) return next();
   } catch (e) { /* fall through to 403 */ }
   return res.status(403).json({ error: 'enrollment_required' });
+});
+
+// Admin-uploaded lesson videos (persistent disk): same gate as /videos —
+// admins and enrolled students only; everyone else is refused.
+app.use('/uploads/:file', (req, res) => {
+  const file = String(req.params.file || '');
+  if (!uploadNameOk(file) || path.basename(file) !== file) return res.status(403).json({ error: 'forbidden' });
+  let allowed = false;
+  try {
+    const u = me(req);
+    allowed = !!(u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled));
+  } catch (e) { /* fall through to 403 */ }
+  if (!allowed) return res.status(403).json({ error: 'enrollment_required' });
+  res.sendFile(path.join(UPLOAD_DIR, file), (err) => {
+    if (err && !res.headersSent) res.status(404).json({ error: 'not_found' });
+  });
 });
 
 // Paid bonus files: enrolled students + admins only.
