@@ -29,6 +29,17 @@
 .vid-info{flex:1;display:grid;gap:6px}
 .vid-title{font-weight:700}
 .vid-meta{display:flex;gap:6px;flex-wrap:wrap}
+/* --- king panel: bigger tap targets, owner highlights --- */
+.admin-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+.admin-tab{padding:12px 20px;font-size:1rem;white-space:nowrap;min-height:48px}
+.icon-btn{min-height:40px;padding:8px 12px;font-size:.85rem}
+.admin-table .btn-sm{min-height:38px;padding:8px 14px}
+.stat-card.warn{border-color:rgba(255,176,32,.55);background:rgba(255,176,32,.07)}
+.stat-card.warn b{color:#ffb020}
+.pending-alert{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.4);border-radius:14px;padding:14px 18px;margin-bottom:18px;color:#ffcf6b}
+.pill.owner{background:rgba(245,197,24,.14);color:var(--gold,#f5c518);border:1px solid rgba(245,197,24,.45)}
+.row-self{opacity:.8}
+button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -156,23 +167,27 @@ async function renderOverview() {
       <div class="stat-card"><b>${o.enrolled}</b><span>مشترك في الدورة</span></div>
       <div class="stat-card"><b>${o.orders || 0}</b><span>طلب</span></div>
       <div class="stat-card"><b>${o.paidOrders || 0}</b><span>طلب مدفوع</span></div>
-      <div class="stat-card"><b>${o.pendingOrders || 0}</b><span>طلب معلق</span></div>
+      <div class="stat-card${o.pendingOrders ? ' warn' : ''}"><b>${o.pendingOrders || 0}</b><span>طلب معلق ⏳</span></div>
       <div class="stat-card"><b>${o.refunds || 0}</b><span>استرداد</span></div>
       <div class="stat-card"><b>$${rev}</b><span>إجمالي الإيرادات</span></div>
       <div class="stat-card"><b>${o.modules}</b><span>Module</span></div>
       <div class="stat-card"><b>${o.lessons}</b><span>درس</span></div>
     </div>
+    ${o.pendingOrders > 0 ? `<div class="pending-alert">⏳ <span><b>${o.pendingOrders} طلبات معلّقة</b> بانتظار تأكيد الدفع اليدوي</span><button class="btn btn-primary btn-sm" id="ov-pending-btn" style="margin-inline-start:auto">مراجعة الطلبات المعلّقة ←</button></div>` : ''}
     <div class="glass"><h3 style="margin-bottom:14px">أحدث الطلاب</h3>
       <div class="table-wrap"><table class="admin-table">
         <tr><th>الاسم</th><th>البريد</th><th>تاريخ التسجيل</th></tr>
         ${o.recent.map((u) => `<tr><td>${E(u.name)}</td><td dir="ltr" style="text-align:left">${E(u.email)}</td><td>${E(u.created_at.slice(0, 10))}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--muted)">لا يوجد طلاب بعد</td></tr>'}
       </table></div>
     </div>`;
+  const pb = document.getElementById('ov-pending-btn');
+  if (pb) pb.onclick = () => { ordersPresetStatus = 'pending'; document.querySelector('[data-tab="orders"]').click(); };
 }
 
 // ---------- orders & payments ----------
 const ORDER_STATUS_AR = { pending: 'معلق ⏳', paid: 'مدفوع ✅', failed: 'فاشل ❌', cancelled: 'ملغي ↩️', refunded: 'مسترد 💸', disputed: 'نزاع ⚠️' };
 let ordersCache = [];
+let ordersPresetStatus = '';
 async function renderOrders() {
   const panel = document.getElementById('panel-orders');
   panel.innerHTML = `<div class="glass" style="margin-bottom:18px">
@@ -229,6 +244,7 @@ async function renderOrders() {
       });
     } catch (e) { App.toast('تعذر تحميل الطلبات'); }
   };
+  if (ordersPresetStatus) { document.getElementById('orders-status').value = ordersPresetStatus; ordersPresetStatus = ''; }
   document.getElementById('orders-search').onclick = load;
   document.getElementById('orders-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') load(); });
   load();
@@ -543,9 +559,30 @@ async function renderSite() {
   ], async ([code, percent_off]) => { await Store.adminCreate('coupons', { code: code.toUpperCase(), percent_off, is_active: 1 }); App.toast('✓'); renderSite(); });
 
   panel.onclick = async (e) => {
-    const b = e.target.closest('[data-del-bonus],[data-vis-bonus],[data-del-faq],[data-vis-faq],[data-del-coupon],[data-vis-coupon],[data-del-testi]');
+    const b = e.target.closest('[data-del-bonus],[data-vis-bonus],[data-edit-bonus],[data-del-faq],[data-vis-faq],[data-edit-faq],[data-del-coupon],[data-vis-coupon],[data-edit-coupon],[data-del-testi]');
     if (!b) return;
     const d = b.dataset;
+    if (d.editBonus !== undefined) {
+      const it = bonuses.find((x) => x.id === +d.editBonus); if (!it) return;
+      openModal('تعديل بونص', [
+        { label: 'العنوان', value: it.title }, { label: 'الوصف', type: 'textarea', value: it.description || '' },
+      ], async ([title, description]) => { await Store.adminUpdate('bonuses', it.id, { title, description }); App.toast('تم الحفظ ✓'); renderSite(); });
+      return;
+    }
+    if (d.editFaq !== undefined) {
+      const it = faqs.find((x) => x.id === +d.editFaq); if (!it) return;
+      openModal('تعديل سؤال شائع', [
+        { label: 'السؤال', value: it.question }, { label: 'الجواب', type: 'textarea', value: it.answer },
+      ], async ([question, answer]) => { await Store.adminUpdate('faqs', it.id, { question, answer }); App.toast('تم الحفظ ✓'); renderSite(); });
+      return;
+    }
+    if (d.editCoupon !== undefined) {
+      const it = coupons.find((x) => x.id === +d.editCoupon); if (!it) return;
+      openModal('تعديل كود الخصم', [
+        { label: 'الكود', value: it.code, dir: 'ltr' }, { label: 'نسبة الخصم %', type: 'number', value: it.percent_off },
+      ], async ([code, percent_off]) => { await Store.adminUpdate('coupons', it.id, { code: code.toUpperCase(), percent_off }); App.toast('تم الحفظ ✓'); renderSite(); });
+      return;
+    }
     const table = d.delBonus !== undefined || d.visBonus !== undefined ? 'bonuses'
       : d.delFaq !== undefined || d.visFaq !== undefined ? 'faqs'
       : d.delCoupon !== undefined || d.visCoupon !== undefined ? 'coupons' : 'testimonials';
@@ -565,6 +602,8 @@ async function renderSite() {
 // ---------- students ----------
 async function renderStudents() {
   const list = await Store.adminUsers();
+  const ME = window.ME || {};
+  const iAmSuper = ME.role === 'super_admin';
   const panel = document.getElementById('panel-students');
   panel.innerHTML = `
     <div class="glass"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
@@ -575,25 +614,49 @@ async function renderStudents() {
       <tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الاشتراك</th><th>إجراءات</th></tr>
       <tbody id="students-rows"></tbody>
     </table></div>
-    <p style="color:var(--muted);font-size:.88rem;margin-top:12px">💡 "تفعيل الاشتراك" يمنح الطالب الوصول الفوري للدورة — استعمله بعد تأكيد الدفع اليدوي.</p></div>`;
+    <p style="color:var(--muted);font-size:.88rem;margin-top:12px">💡 "تفعيل الاشتراك" يمنح الطالب الوصول الفوري للدورة — استعمله بعد تأكيد الدفع اليدوي. حسابات 👑 المالك محمية: لا يعدّلها أو يحذفها إلا مالك آخر، ولا يمكن حذف آخر مالك.</p></div>`;
+  const rolePill = (u) => u.role === 'super_admin' ? '<span class="pill owner">👑 مالك</span>'
+    : u.role === 'admin' ? '<span class="pill on">Admin 🛠</span>' : '<span class="pill">طالب</span>';
+  const errToast = (e, fallback) => App.toast(
+    e.code === 'cannot_remove_last_admin' ? 'لا يمكن إزالة آخر Admin في النظام'
+    : e.code === 'cannot_remove_last_super_admin' ? 'لا يمكن تنزيل أو حذف آخر مالك 👑'
+    : e.code === 'cannot_demote_self' ? 'لا يمكنك تنزيل نفسك'
+    : e.code === 'cannot_delete_self' ? 'لا يمكنك حذف حسابك'
+    : e.code === 'super_admin_protected' ? 'هذا الحساب مالك 👑 — لا يعدّله إلا مالك آخر'
+    : fallback, true);
   const draw = (filter) => {
     const f = (filter || '').toLowerCase();
     const rows = list.filter((u) => !f || u.name.toLowerCase().includes(f) || u.email.toLowerCase().includes(f));
     document.getElementById('students-count').textContent = rows.length;
-    document.getElementById('students-rows').innerHTML = rows.map((u) => `<tr><td>${E(u.name)}</td><td dir="ltr" style="text-align:left">${E(u.email)}</td>
-        <td>${u.role === 'admin' ? '<span class="pill on">Admin</span>' : 'طالب'}</td>
+    document.getElementById('students-rows').innerHTML = rows.map((u) => {
+      const isSelf = ME.id === u.id;
+      const protectedRow = u.role === 'super_admin' && !iAmSuper;
+      const actions = [];
+      if (isSelf) {
+        actions.push('<span style="color:var(--muted);font-size:.8rem">(حسابك — محمي من التعديل الذاتي)</span>');
+      } else if (protectedRow) {
+        actions.push(`<button class="icon-btn" data-enroll="${u.id}" data-on="${u.enrolled ? 0 : 1}">${u.enrolled ? 'إلغاء الاشتراك' : 'تفعيل الاشتراك'}</button>`);
+        actions.push('<span style="color:var(--muted);font-size:.8rem">🔒 مالك محمي</span>');
+      } else {
+        actions.push(`<button class="icon-btn" data-enroll="${u.id}" data-on="${u.enrolled ? 0 : 1}">${u.enrolled ? 'إلغاء الاشتراك' : 'تفعيل الاشتراك'}</button>`);
+        if (u.role === 'student') actions.push(`<button class="icon-btn" data-role="${u.id}" data-r="admin">⬆ ترقية Admin</button>`);
+        if (u.role === 'admin') actions.push(`<button class="icon-btn" data-role="${u.id}" data-r="student">⬇ تنزيل لطالب</button>`);
+        if (u.role === 'super_admin') actions.push(`<button class="icon-btn" data-role="${u.id}" data-r="admin">⬇ تنزيل لـ Admin</button>`);
+        actions.push(`<button class="icon-btn" data-deluser="${u.id}" data-email="${E(u.email)}" style="color:#ff9a9a">🗑️ حذف</button>`);
+      }
+      return `<tr class="${isSelf ? 'row-self' : ''}"><td>${E(u.name)}${isSelf ? ' <small style="color:var(--muted)">(أنت)</small>' : ''}</td><td dir="ltr" style="text-align:left">${E(u.email)}</td>
+        <td>${rolePill(u)}</td>
         <td>${u.enrolled ? '<span class="pill on">مشترك ✓</span>' : '<span class="pill off">غير مشترك</span>'}</td>
-        <td><div class="row-actions">
-          <button class="icon-btn" data-enroll="${u.id}" data-on="${u.enrolled ? 0 : 1}">${u.enrolled ? 'إلغاء الاشتراك' : 'تفعيل الاشتراك'}</button>
-          <button class="icon-btn" data-role="${u.id}" data-r="${u.role === 'admin' ? 'student' : 'admin'}">${u.role === 'admin' ? '⬇ طالب' : '⬆ Admin'}</button>
-        </div></td></tr>`).join('')
+        <td><div class="row-actions">${actions.join('')}</div></td></tr>`;
+    }).join('')
       || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا نتائج</td></tr>';
     bindStudentButtons();
   };
   const bindStudentButtons = () => {
     panel.querySelectorAll('[data-enroll]').forEach((btn) => btn.onclick = async () => {
       if (btn.dataset.on === '0' && !confirm('إلغاء اشتراك هذا الطالب؟ سيفقد الوصول للدروس.')) return;
-      await Store.adminEnroll(+btn.dataset.enroll, btn.dataset.on === '1');
+      try { await Store.adminEnroll(+btn.dataset.enroll, btn.dataset.on === '1'); }
+      catch (e) { errToast(e, 'تعذر تعديل الاشتراك'); return; }
       App.toast('تم ✓');
       const u = list.find((x) => x.id === +btn.dataset.enroll);
       if (u) u.enrolled = btn.dataset.on === '1' ? 1 : 0;
@@ -601,11 +664,13 @@ async function renderStudents() {
     });
     panel.querySelectorAll('[data-role]').forEach((btn) => btn.onclick = async () => {
       if (!confirm('تغيير دور هذا المستخدم؟')) return;
-      try { await Store.adminRole(+btn.dataset.role, btn.dataset.r); App.toast('تم ✓'); renderStudents(); }
-      catch (e) {
-        App.toast(e.code === 'cannot_remove_last_admin' ? 'لا يمكن إزالة آخر Admin في النظام'
-          : e.code === 'cannot_demote_self' ? 'لا يمكنك تنزيل نفسك' : 'تعذر تغيير الدور');
-      }
+      try { await Store.adminRole(+btn.dataset.role, btn.dataset.r); App.toast('تم تغيير الدور ✓'); renderStudents(); }
+      catch (e) { errToast(e, 'تعذر تغيير الدور'); }
+    });
+    panel.querySelectorAll('[data-deluser]').forEach((btn) => btn.onclick = async () => {
+      if (!confirm('⚠️ حذف المستخدم ' + btn.dataset.email + ' نهائياً؟\nسيُحذف حسابه واشتراكه وتقدّمه في الدورة، ولا يمكن التراجع.')) return;
+      try { await Store.adminDeleteUser(+btn.dataset.deluser); App.toast('تم حذف المستخدم'); renderStudents(); }
+      catch (e) { errToast(e, 'تعذر الحذف'); }
     });
   };
   document.getElementById('students-q').addEventListener('input', (e) => draw(e.target.value));
@@ -640,6 +705,7 @@ const SETTING_GROUPS = [
   { title: '💬 الدعم والتواصل', keys: [
     ['SUPPORT_WHATSAPP', 'رقم واتساب الدعم (دولي أو محلي)', null, 'ltr'],
     ['SUPPORT_WHATSAPP_COUNTRY_CODE', 'كود الدولة للأرقام المحلية (مثال: 212)', null, 'ltr'],
+    ['COMMUNITY_WHATSAPP_URL', 'رابط مجموعة واتساب الطلاب (يظهر فقط للمسجلين في الدورة)', null, 'ltr'],
     ['CONTACT_EMAIL', 'بريد التواصل', null, 'ltr'],
   ]},
   { title: '🔍 SEO', keys: [
@@ -650,7 +716,8 @@ const SETTING_GROUPS = [
   ]},
 ];
 async function renderSettings() {
-  const s = await Store.settings();
+  let s;
+  try { s = await Store.adminSettings(); } catch { s = await Store.settings(); }
   const panel = document.getElementById('panel-settings');
   panel.innerHTML = SETTING_GROUPS.map((g, gi) => `
     <div class="glass" style="margin-bottom:18px"><h3 style="margin-bottom:14px">${g.title}</h3>
@@ -668,8 +735,8 @@ async function renderSettings() {
   document.getElementById('save-settings').onclick = async () => {
     const obj = {};
     SETTING_GROUPS.forEach((g) => g.keys.forEach(([key]) => { obj[key] = document.getElementById('set-' + key).value; }));
-    await Store.adminSaveSettings(obj);
-    App.toast('تم حفظ الإعدادات ✓');
+    try { await Store.adminSaveSettings(obj); App.toast('تم حفظ الإعدادات ✓'); }
+    catch (e) { App.toast('تعذر الحفظ — تحقق من صيغة الحقول (السعر/الروابط/الأرقام)', true); }
   };
 }
 
@@ -693,6 +760,7 @@ function forcePasswordChangeModal() {
   let user;
   try { user = await Store.me(); } catch {}
   if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) { location.href = '/admin/login'; return; }
+  window.ME = user;
   await App.applySettings();
   try { await Store.adminOverview(); }
   catch (e) {
