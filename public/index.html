@@ -57,9 +57,6 @@
 .cine-frame video{display:block;width:100%;border-radius:19px;aspect-ratio:9/16;object-fit:cover;background:#050b16}
 .cine-list{list-style:none;padding:0;margin:18px 0 26px}
 .cine-list li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:1rem}
-.cine-duo{display:flex;gap:18px;justify-content:center;width:100%}
-.cine-duo .cine-frame{flex:1;max-width:300px}
-@media(max-width:560px){.cine-duo{flex-direction:column;align-items:center}}
 .hero .container{position:relative;z-index:1}
 /* trust marquee */
 .trust-marquee{overflow:hidden;white-space:nowrap;background:rgba(245,197,24,.06);border-top:1px solid rgba(245,197,24,.15);border-bottom:1px solid rgba(245,197,24,.15);padding:12px 0;margin:0}
@@ -190,6 +187,7 @@ section{padding:64px 0!important}
 <header class="site-header" id="site-header"><div class="container"><a class="logo" href="/"><img loading="lazy" class="logo-mark" src="/images/logo.svg" alt="TradePro Academy"><span>{{COURSE_NAME}}</span></a><button class="menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">☰</button><nav class="nav-links" id="main-nav"><a href="/">الرئيسية</a><a href="/course">المنهج</a><a href="/blog/">📚 المدونة</a><a href="/about.html">من نحن</a></nav><div class="header-actions"><a class="btn btn-ghost btn-sm" href="/login">دخول</a><a class="btn btn-primary btn-sm" href="/register">ابدأ الآن</a></div></div></header>
 
 <!-- ============ HERO (VSL) ============ -->
+
 <section class="hero" style="position:relative;overflow:hidden">
   <canvas id="hero-particles"></canvas>
   <canvas id="hero-3d"></canvas>
@@ -269,15 +267,10 @@ section{padding:64px 0!important}
         </ul>
         <a href="/course" class="btn btn-primary btn-lg">استعرض المنهج</a>
       </div>
-      <div class="cine-duo">
+      <div>
       <div class="cine-frame">
         <video autoplay muted loop playsinline preload="metadata" poster="/images/mindset-main-poster.jpg" data-autoplay>
           <source src="/media/mindset-main.mp4" type="video/mp4">
-        </video>
-      </div>
-      <div class="cine-frame">
-        <video autoplay muted loop playsinline preload="metadata" poster="/images/trader-anim-poster.jpg" data-autoplay>
-          <source src="/media/trader-anim.mp4" type="video/mp4">
         </video>
       </div>
       </div>
@@ -334,40 +327,8 @@ section{padding:64px 0!important}
   </div>
 </section>
 
-<!-- ============ STRATEGIES ============ -->
-<section id="strategies" style="padding-top:0">
-  <div class="container">
-    <h2 class="section-title reveal">استراتيجيات عملية ستتقنها</h2>
-    <p class="section-sub reveal">لمحات حقيقية من داخل الدورة — كل استراتيجية تُشرح خطوة بخطوة مع أمثلة على الشارت.</p>
-    <div class="strat-grid">
-      <div class="strat-card reveal">
-        <img src="images/strategies/chart-60sec.png" alt="قراءة الشارت" loading="lazy">
-        <div class="sbody"><h3>📊 قراءة أي شارت في 60 ثانية</h3><p>كيف تحدد اتجاه السوق بسرعة عبر القمم والقيعان (HH / HL) — أول مهارة عملية يتقنها الطالب.</p></div>
-      </div>
-      <div class="strat-card reveal">
-        <img src="images/strategies/trendline.png" alt="خط الاتجاه" loading="lazy">
-        <div class="sbody"><h3>📈 خط الاتجاه: متى تشتري ومتى تبيع</h3><p>رسم خط الاتجاه الصحيح واستخدامه لتحديد مناطق الدخول والخروج بانضباط، بدل التخمين العشوائي.</p></div>
-      </div>
-      <div class="strat-card reveal">
-        <img src="images/strategies/support-resistance.jpg" alt="الدعم والمقاومة" loading="lazy">
-        <div class="sbody"><h3>🧱 الدعم يتحول إلى مقاومة</h3><p>فهم المستويات الرئيسية (Key Levels) وكيف تتحول مناطق الدعم إلى مقاومة — أساس قراءة الشارت الاحترافية.</p></div>
-      </div>
-      <div class="strat-card reveal">
-        <img src="images/strategies/hammer.png" alt="شمعة الهامر" loading="lazy">
-        <div class="sbody"><h3>🔨 شمعة الهامر — Price Action</h3><p>أول دروس البرايس أكشن: كيف تقرأ شمعة الهامر وتفهم الرسالة التي تحملها حركة السعر.</p></div>
-      </div>
-      <div class="strat-card reveal">
-        <img src="images/strategies/order-blocks.png" alt="Order Blocks" loading="lazy">
-        <div class="sbody"><h3>🧊 الـ Order Blocks</h3><p>مفهوم متقدم: كيف تحدد مناطق السيولة التي تنطلق منها الحركات القوية — ضمن مستوى الدورة المتقدم.</p></div>
-      </div>
-      <div class="strat-card reveal" style="display:flex;align-items:center;justify-content:center;text-align:center">
-        <div class="sbody"><h3>🎓 + المزيد داخل الدورة</h3><p>6 دروس فيديو عملية في التداول.</p><a href="#pricing" class="btn btn-primary" style="margin-top:14px">احصل على الدورة</a></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ WHAT YOU'LL LEARN ============ --><section id="learn" style="padding-top:0">
+<!-- ============ WHAT YOU'LL LEARN ============ -->
+<section id="learn" style="padding-top:0">
   <div class="container">
     <h2 class="section-title reveal">ماذا ستتعلم؟</h2>
     <p class="section-sub reveal">مهارات عملية تخرج بها من الدورة.</p>
@@ -378,21 +339,6 @@ section{padding:64px 0!important}
       <div class="learn-item reveal"><span class="tick">✓</span><div><b>بناء استراتيجية</b><br><span style="color:var(--muted);font-size:.9rem">قواعد دخول وخروج واضحة وقابلة للاختبار والتوثيق.</span></div></div>
       <div class="learn-item reveal"><span class="tick">✓</span><div><b>الانضباط النفسي</b><br><span style="color:var(--muted);font-size:.9rem">التعامل مع العواطف والالتزام بالخطة في كل الظروف.</span></div></div>
       <div class="learn-item reveal"><span class="tick">✓</span><div><b>Backtesting</b><br><span style="color:var(--muted);font-size:.9rem">اختبار استراتيجيتك على البيانات التاريخية قبل المخاطرة.</span></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FEATURES ============ -->
-<section id="features" style="padding-top:0">
-  <div class="container">
-    <h2 class="section-title reveal">مميزات الدورة</h2>
-    <div class="grid grid-3">
-      <div class="glass reveal"><div class="card-icon">🎬</div><h3>فيديوهات منظمة</h3><p>دروس مرتبة في Modules متسلسلة منطقياً من الأساسيات إلى الاحتراف.</p></div>
-      <div class="glass reveal"><div class="card-icon">👣</div><h3>شرح خطوة بخطوة</h3><p>كل مفهوم يُشرح بالتدرج مع التطبيق العملي المباشر.</p></div>
-      <div class="glass reveal"><div class="card-icon">📈</div><h3>أمثلة عملية</h3><p>تحليل حقيقي على الشارت وليس نظريات مجردة.</p></div>
-      <div class="glass reveal"><div class="card-icon">📁</div><h3>ملفات وموارد إضافية</h3><p>PDF وChecklists وقوالب Trading Plan وملفات Excel للتحميل.</p></div>
-      <div class="glass reveal"><div class="card-icon">🔄</div><h3>تحديثات مستقبلية</h3><p>كل الدروس الجديدة تُضاف إلى حسابك تلقائياً.</p></div>
-      <div class="glass reveal"><div class="card-icon">📱</div><h3>وصول من الهاتف والكمبيوتر</h3><p>منصة متجاوبة تعمل بسلاسة على جميع الأجهزة.</p></div>
     </div>
   </div>
 </section>
@@ -444,15 +390,15 @@ section{padding:64px 0!important}
   </div>
 </section>
 
-<!-- ============ HOW IT WORKS ============ -->
-<section id="how" style="padding-top:0">
-  <div class="container">
-    <h2 class="section-title reveal">كيف تبدأ؟</h2>
-    <p class="section-sub reveal">ثلاث خطوات فقط تفصلك عن أول درس.</p>
-    <div class="steps">
-      <div class="step reveal"><div class="n">1</div><h3>احصل على الدورة</h3><p>اضغط زر الشراء وأتمم الدفع الآمن في أقل من دقيقتين.</p></div>
-      <div class="step reveal"><div class="n">2</div><h3>ادخل منصتك الخاصة</h3><p>تحصل فوراً على الوصول إلى بوابة الطالب بجميع الدروس والموارد.</p></div>
-      <div class="step reveal"><div class="n">3</div><h3>تعلّم خطوة بخطوة</h3><p>تابع الدروس بالترتيب، وطبّق على الشارت، وابنِ خطة تداولك.</p></div>
+<!-- ============ SUPPORTING PARTNER ============ -->
+<section style="padding-top:0">
+  <div class="container" style="text-align:center">
+    <h2 class="section-title reveal">🤝 بدعم من</h2>
+    <p class="section-sub reveal">شريك داعم لمشروع TradePro Academy التعليمي</p>
+    <div class="reveal" style="display:block;max-width:720px;margin:0 auto">
+      <img src="/images/partners/fbi-wolves-banner.jpg" alt="FSBI WOLVES — مجتمع تداول" width="1080" height="1080" loading="lazy" style="width:100%;height:auto;display:block;border-radius:18px;border:1px solid rgba(245,197,24,.35);box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4)">
+      <div dir="ltr" style="font-weight:900;font-size:1.3rem;color:var(--gold,#f5c518);letter-spacing:3px;margin-top:16px">FSBI WOLVES</div>
+      <div style="color:var(--muted);font-size:.85rem;margin-top:2px">مجتمع تداول · شريك داعم</div>
     </div>
   </div>
 </section>
@@ -526,13 +472,15 @@ section{padding:64px 0!important}
   </div>
 </section>
 
-<section>
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how" style="padding-top:0">
   <div class="container">
-    <h2 class="section-title reveal">كيف تبدأ؟ 3 خطوات فقط</h2>
-    <div class="steps-row">
-      <div class="step-card reveal"><div class="step-num">1</div><h4>🏦 اشترِ الدورة</h4><p>دفع سهل — تحويل بنكي وتأكيد عبر واتساب</p></div>
-      <div class="step-card reveal"><div class="step-num">2</div><h4>📧 توصلك رسالة</h4><p>بيانات الدخول + روابط البونص</p></div>
-      <div class="step-card reveal"><div class="step-num">3</div><h4>🎬 ابدأ التعلم</h4><p>ادخل لمنصتك وشاهد الدروس فوراً</p></div>
+    <h2 class="section-title reveal">كيف تبدأ؟</h2>
+    <p class="section-sub reveal">ثلاث خطوات فقط تفصلك عن أول درس.</p>
+    <div class="steps">
+      <div class="step reveal"><div class="n">1</div><h3>احصل على الدورة</h3><p>اضغط زر الشراء وأتمم الدفع الآمن في أقل من دقيقتين.</p></div>
+      <div class="step reveal"><div class="n">2</div><h3>ادخل منصتك الخاصة</h3><p>تحصل فوراً على الوصول إلى بوابة الطالب بجميع الدروس والموارد.</p></div>
+      <div class="step reveal"><div class="n">3</div><h3>تعلّم خطوة بخطوة</h3><p>تابع الدروس بالترتيب، وطبّق على الشارت، وابنِ خطة تداولك.</p></div>
     </div>
   </div>
 </section>
@@ -621,20 +569,6 @@ section{padding:64px 0!important}
     </div>
     <div class="disclaimer" style="margin-top:34px">
       ⚠️ <b>إخلاء مسؤولية:</b> <span data-s="DISCLAIMER"></span>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============ SUPPORTING PARTNER ============ -->
-<section style="padding-top:0">
-  <div class="container" style="text-align:center">
-    <h2 class="section-title reveal">🤝 بدعم من</h2>
-    <p class="section-sub reveal">شريك داعم لمشروع TradePro Academy التعليمي</p>
-    <div class="reveal" style="display:block;max-width:720px;margin:0 auto">
-      <img src="/images/partners/fbi-wolves-banner.jpg" alt="FSBI WOLVES — مجتمع تداول" width="1080" height="1080" loading="lazy" style="width:100%;height:auto;display:block;border-radius:18px;border:1px solid rgba(245,197,24,.35);box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4)">
-      <div dir="ltr" style="font-weight:900;font-size:1.3rem;color:var(--gold,#f5c518);letter-spacing:3px;margin-top:16px">FSBI WOLVES</div>
-      <div style="color:var(--muted);font-size:.85rem;margin-top:2px">مجتمع تداول · شريك داعم</div>
     </div>
   </div>
 </section>
