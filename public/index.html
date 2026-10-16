@@ -51,6 +51,12 @@
 </style><style>
 #hero-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 #hero-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0;transition:opacity 1.2s ease}
+.cine-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center}
+@media(max-width:820px){.cine-wrap{grid-template-columns:1fr}}
+.cine-frame{position:relative;max-width:330px;margin-inline:auto;width:100%;border-radius:22px;padding:3px;background:linear-gradient(160deg,rgba(245,197,24,.85),rgba(245,197,24,.12) 45%,rgba(0,229,160,.35));box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 60px rgba(245,197,24,.12)}
+.cine-frame video{display:block;width:100%;border-radius:19px;aspect-ratio:9/16;object-fit:cover;background:#050b16}
+.cine-list{list-style:none;padding:0;margin:18px 0 26px}
+.cine-list li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:1rem}
 .hero .container{position:relative;z-index:1}
 /* trust marquee */
 .trust-marquee{overflow:hidden;white-space:nowrap;background:rgba(245,197,24,.06);border-top:1px solid rgba(245,197,24,.15);border-bottom:1px solid rgba(245,197,24,.15);padding:12px 0;margin:0}
@@ -241,6 +247,30 @@ section{padding:64px 0!important}
       <div class="glass reveal"><span class="solution-tag">بدل القرارات العاطفية</span><h3>انضباط نفسي مبني على قواعد</h3><p>Module كامل في Trading Psychology يعلمك كيف تلتزم بالخطة حتى في أصعب اللحظات.</p></div>
       <div class="glass reveal"><span class="solution-tag">بدل ضعف إدارة المخاطر</span><h3>إدارة رأس مال صارمة</h3><p>تتعلم حساب حجم الصفقة ووقف الخسارة ونسبة المخاطرة إلى العائد قبل أي دخول.</p></div>
       <div class="glass reveal"><span class="solution-tag">بدل كثرة المؤشرات</span><h3>Price Action واضح وبسيط</h3><p>قراءة حركة السعر الخام وبناء استراتيجية بقواعد دخول وخروج قابلة للاختبار.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MINDSET FILM ============ -->
+<section id="mindset" style="padding-top:0">
+  <div class="container">
+    <div class="cine-wrap reveal">
+      <div class="cine-copy">
+        <span class="eyebrow">🧠 عقلية المتداول</span>
+        <h2 class="section-title" style="text-align:right">التداول يبدأ من العقل… قبل الشارت</h2>
+        <p class="section-sub" style="text-align:right;margin-inline:0">أقوى أدوات المتداول ليست المؤشرات — بل انضباطه. في هذه الدورة لا تتعلّم قراءة الشارت فقط، بل تبني العقلية التي تحمي رأس مالك:</p>
+        <ul class="cine-list">
+          <li>📋 خطة تداول مكتوبة قبل أي صفقة — لا قرارات لحظية</li>
+          <li>🛡️ إدارة رأس مال صارمة: مخاطرة محسوبة بين 1–2% فقط</li>
+          <li>🎯 انضباط كامل: العاطفة خارج الصفقة، دائماً</li>
+        </ul>
+        <a href="/course" class="btn btn-primary btn-lg">استعرض المنهج</a>
+      </div>
+      <div class="cine-frame">
+        <video autoplay muted loop playsinline preload="metadata" poster="/images/mindset-main-poster.jpg" data-autoplay>
+          <source src="/media/mindset-main.mp4" type="video/mp4">
+        </video>
+      </div>
     </div>
   </div>
 </section>
