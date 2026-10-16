@@ -57,6 +57,9 @@
 .cine-frame video{display:block;width:100%;border-radius:19px;aspect-ratio:9/16;object-fit:cover;background:#050b16}
 .cine-list{list-style:none;padding:0;margin:18px 0 26px}
 .cine-list li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:1rem}
+.cine-duo{display:flex;gap:18px;justify-content:center;width:100%}
+.cine-duo .cine-frame{flex:1;max-width:300px}
+@media(max-width:560px){.cine-duo{flex-direction:column;align-items:center}}
 .hero .container{position:relative;z-index:1}
 /* trust marquee */
 .trust-marquee{overflow:hidden;white-space:nowrap;background:rgba(245,197,24,.06);border-top:1px solid rgba(245,197,24,.15);border-bottom:1px solid rgba(245,197,24,.15);padding:12px 0;margin:0}
@@ -266,10 +269,17 @@ section{padding:64px 0!important}
         </ul>
         <a href="/course" class="btn btn-primary btn-lg">استعرض المنهج</a>
       </div>
+      <div class="cine-duo">
       <div class="cine-frame">
         <video autoplay muted loop playsinline preload="metadata" poster="/images/mindset-main-poster.jpg" data-autoplay>
           <source src="/media/mindset-main.mp4" type="video/mp4">
         </video>
+      </div>
+      <div class="cine-frame">
+        <video autoplay muted loop playsinline preload="metadata" poster="/images/trader-anim-poster.jpg" data-autoplay>
+          <source src="/media/trader-anim.mp4" type="video/mp4">
+        </video>
+      </div>
       </div>
     </div>
   </div>
