@@ -167,6 +167,18 @@
     frame();
   }
 
+  /* ---- Showcase films: play only while on screen (saves data & battery) ---- */
+  var vids = document.querySelectorAll('video[data-autoplay]');
+  if (vids.length && 'IntersectionObserver' in window) {
+    var vio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.intersectionRatio >= 0.3) { en.target.play().catch(function () {}); }
+        else en.target.pause();
+      });
+    }, { threshold: [0, 0.3] });
+    vids.forEach(function (v) { vio.observe(v); });
+  }
+
   /* ---- 3D tilt for the pricing card & hero video (desktop pointers) ---- */
   if (reduced || !window.matchMedia('(pointer: fine)').matches) return;
   function addTilt(el, maxDeg) {
@@ -189,4 +201,5 @@
   }
   addTilt(document.querySelector('.pricing-card'), 5);
   addTilt(document.querySelector('.hero-video'), 4);
+  addTilt(document.querySelector('.cine-frame'), 6);
 })();
