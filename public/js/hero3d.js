@@ -201,5 +201,5 @@
   }
   addTilt(document.querySelector('.pricing-card'), 5);
   addTilt(document.querySelector('.hero-video'), 4);
-  addTilt(document.querySelector('.cine-frame'), 6);
+  document.querySelectorAll('.cine-frame').forEach(function (el) { addTilt(el, 6); });
 })();
