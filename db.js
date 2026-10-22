@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   thumbnail TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
   duration TEXT NOT NULL DEFAULT '',
-  provider TEXT NOT NULL DEFAULT 'youtube' CHECK (provider IN ('youtube','vimeo','cloudflare','mp4')),
+  provider TEXT NOT NULL DEFAULT 'youtube' CHECK (provider IN ('youtube','vimeo','cloudflare','mp4','vdocipher')),
   sort_order INTEGER NOT NULL DEFAULT 0,
   is_visible INTEGER NOT NULL DEFAULT 1,
   is_free_preview INTEGER NOT NULL DEFAULT 0
@@ -371,6 +371,33 @@ const MIGRATIONS = [
       db.prepare("UPDATE modules SET is_visible = 1").run();
     },
   },
+  {
+    v: 19,
+    name: 'allow vdocipher provider on lessons (DRM)',
+    run() {
+      // SQLite cannot alter a CHECK constraint — rebuild the table with the
+      // widened provider list, preserving ids so FK references stay valid.
+      db.exec('PRAGMA foreign_keys=OFF');
+      db.exec(`CREATE TABLE lessons_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        module_id INTEGER NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        video_url TEXT NOT NULL DEFAULT '',
+        thumbnail TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        duration TEXT NOT NULL DEFAULT '',
+        provider TEXT NOT NULL DEFAULT 'youtube' CHECK (provider IN ('youtube','vimeo','cloudflare','mp4','vdocipher')),
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_visible INTEGER NOT NULL DEFAULT 1,
+        is_free_preview INTEGER NOT NULL DEFAULT 0
+      )`);
+      db.exec(`INSERT INTO lessons_new (id, module_id, title, video_url, thumbnail, description, duration, provider, sort_order, is_visible, is_free_preview)
+               SELECT id, module_id, title, video_url, thumbnail, description, duration, provider, sort_order, is_visible, is_free_preview FROM lessons`);
+      db.exec('DROP TABLE lessons');
+      db.exec('ALTER TABLE lessons_new RENAME TO lessons');
+      db.exec('PRAGMA foreign_keys=ON');
+    },
+  },
 ];
 for (const m of MIGRATIONS) {
   const done = db.prepare('SELECT 1 FROM schema_migrations WHERE version = ?').get(m.v);
@@ -586,11 +613,21 @@ try {
   console.log('[db] curriculum finalized (one-time, v18)');
 }
 
+// Server-only secrets live in the settings table but must NEVER be returned
+// by getSettings() (it feeds the public /api/settings endpoint).
+const SECRET_SETTING_KEYS = new Set(['VDOCIPHER_API_SECRET']);
+
 function getSettings() {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const o = {};
-  rows.forEach((r) => (o[r.key] = r.value));
+  rows.forEach((r) => { if (!SECRET_SETTING_KEYS.has(r.key)) o[r.key] = r.value; });
   return o;
 }
 
-module.exports = { db, getSettings, DB_PATH };
+// Raw single-setting read for server-side use only (secrets included).
+function getSetting(key) {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row ? row.value : '';
+}
+
+module.exports = { db, getSettings, getSetting, DB_PATH };

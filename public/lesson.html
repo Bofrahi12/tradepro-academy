@@ -93,8 +93,33 @@
 
   document.getElementById('player').innerHTML = App.videoEmbed(
     lesson.provider, lesson.video_url,
-    lesson.is_free_preview ? '/videos/lesson-1-poster.jpg' : null
+    lesson.is_free_preview ? '/videos/lesson-1-poster.jpg' : null,
+    lesson.id
   );
+  // VdoCipher DRM lessons: fetch a one-time OTP (server checks enrollment)
+  // and mount the DRM player. Screen capture/recordings come out black.
+  if (lesson.provider === 'vdocipher') {
+    (async () => {
+      const slot = document.querySelector('[data-vdo-slot]');
+      if (!slot) return;
+      try {
+        const r = await fetch(`/api/lesson/${lesson.id}/vdo-otp`, { credentials: 'same-origin' });
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d || !d.otp) throw new Error('otp');
+        const f = document.createElement('iframe');
+        f.src = `https://player.vdocipher.com/v2/?otp=${encodeURIComponent(d.otp)}&playbackInfo=${encodeURIComponent(d.playbackInfo)}`;
+        f.setAttribute('allow', 'encrypted-media; autoplay; fullscreen');
+        f.setAttribute('allowfullscreen', '');
+        f.setAttribute('title', 'فيديو الدرس');
+        f.style.cssText = 'width:100%;height:100%;border:0;position:absolute;inset:0';
+        slot.style.cssText = 'position:relative;width:100%;aspect-ratio:16/9;background:#000';
+        slot.innerHTML = '';
+        slot.appendChild(f);
+      } catch (e) {
+        slot.innerHTML = '<div class="video-empty"><div><div style="font-size:2.4rem;margin-bottom:10px">🔒</div><p>تعذر تشغيل الفيديو الآمن حالياً — حدّث الصفحة أو تواصل مع الدعم.</p></div></div>';
+      }
+    })();
+  }
   document.getElementById('lesson-title').textContent = lesson.title;
   document.getElementById('lesson-meta').textContent =
     `${lesson.module ? lesson.module.title + ' · ' : ''}${lesson.duration ? '⏱ ' + lesson.duration + ' · ' : ''}${lesson.is_free_preview ? '🎁 معاينة مجانية' : ''}`;

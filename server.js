@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { db, getSettings, DB_PATH } = require('./db');
+const { db, getSettings, getSetting, DB_PATH } = require('./db');
 const multer = require('multer');
 const V = require('./lib/validate');
 const { getPricing } = require('./lib/pricing');
@@ -385,6 +385,9 @@ function mediaToken(lessonId, userId, ttlSec = 1800) {
   return { token, exp };
 }
 function protectMediaUrl(l, u) {
+  // VdoCipher video IDs are only ever used server-side (OTP endpoint); the
+  // lesson payload ships an empty URL so the player goes through /vdo-otp.
+  if (l.provider === 'vdocipher') return '';
   if (!PROTECT_MEDIA || l.provider !== 'mp4' || !l.video_url) return l.video_url;
   if (u && (u.role === 'admin' || u.role === 'super_admin')) {
     const v = String(l.video_url);
@@ -481,6 +484,47 @@ app.get('/api/lesson/:id', (req, res) => {
   const out = { ...l, module: mod, resources };
   out.video_url = protectMediaUrl(l, u);
   res.json(out);
+});
+
+// ---- VdoCipher DRM: one-time playback OTP for authorized viewers ----
+// Mirrors the access rules of GET /api/lesson/:id. The API secret never
+// leaves the server; the browser receives only a short-lived OTP +
+// playbackInfo pair, and the DRM player burns a dynamic watermark with the
+// viewer's identity (name • email • id) into the stream.
+app.get('/api/lesson/:id/vdo-otp', async (req, res) => {
+  if (!V.isId(req.params.id)) return res.status(404).json({ error: 'not_found' });
+  const u = me(req);
+  const l = db.prepare('SELECT * FROM lessons WHERE id = ? AND is_visible = 1').get(req.params.id);
+  if (!l || l.provider !== 'vdocipher' || !l.video_url) return res.status(404).json({ error: 'not_found' });
+  const isAdmin = u && (u.role === 'admin' || u.role === 'super_admin');
+  const privileged = u && (isAdmin || u.enrolled);
+  if (!privileged && !l.is_free_preview) return res.status(403).json({ error: 'enrollment_required' });
+  if (privileged && !isAdmin && !l.is_free_preview && !isLessonUnlocked(u.id, l.id)) {
+    return res.status(403).json({ error: 'lesson_locked' });
+  }
+  const secret = getSetting('VDOCIPHER_API_SECRET') || process.env.VDOCIPHER_API_SECRET || '';
+  if (!secret) return res.status(503).json({ error: 'drm_not_configured' });
+  const who = u ? `${u.name || ''} • ${u.email} • #${u.id}` : 'معاينة مجانية';
+  try {
+    const r = await fetch(`https://dev.vdocipher.com/api/videos/${encodeURIComponent(l.video_url)}/otp`, {
+      method: 'POST',
+      headers: { Authorization: `Apisecret ${secret}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        ttl: 300,
+        annotate: JSON.stringify([{ text: who, alpha: '0.40', color: '0xFFFFFF', size: 15, interval: 5000, skip: '2000' }]),
+      }),
+    });
+    const data = await r.json().catch(() => null);
+    if (!r.ok || !data || !data.otp || !data.playbackInfo) {
+      console.error('[vdocipher] otp failed', r.status, data && data.message);
+      return res.status(502).json({ error: 'drm_unavailable' });
+    }
+    if (u) audit(u.id, 'vdo_otp_issued', 'lesson', String(l.id), '');
+    res.json({ otp: data.otp, playbackInfo: data.playbackInfo });
+  } catch (e) {
+    console.error('[vdocipher] otp error', e.message);
+    res.status(502).json({ error: 'drm_unavailable' });
+  }
 });
 
 app.get('/api/public-content', (req, res) => {
@@ -1086,8 +1130,16 @@ const SETTING_KEYS = {
   SHOW_TESTIMONIALS: (v) => (v === '1' || v === 1 || v === true ? '1' : '0'),
   COURSE_HOURS: (v) => { const s = String(v || '').trim(); return !s || /^\d{1,4}$/.test(s) ? s : null; },
   CONTACT_EMAIL: (v) => { const s = String(v || '').trim(); return !s || V.validEmail(s) ? s : null; },
+  // Server-only secret (never exposed via getSettings). '__SET__' is the admin
+  // UI's "already saved" placeholder and means: keep the stored value.
+  VDOCIPHER_API_SECRET: (v) => { const s = String(v || '').trim(); return s === '__SET__' || /^[^\s]{10,200}$/.test(s) ? s : null; },
 };
-app.get('/api/admin/settings', requireAdmin, (req, res) => res.json(getSettings()));
+app.get('/api/admin/settings', requireAdmin, (req, res) => {
+  const s = getSettings();
+  // Never send the real secret to the browser — only whether one is stored.
+  s.VDOCIPHER_API_SECRET = getSetting('VDOCIPHER_API_SECRET') ? '__SET__' : '';
+  res.json(s);
+});
 app.put('/api/admin/settings', requireAdmin, (req, res) => {
   const body = req.body || {};
   const bad = [];
@@ -1102,7 +1154,10 @@ app.put('/api/admin/settings', requireAdmin, (req, res) => {
   if (bad.length) return res.status(400).json({ error: 'invalid_setting', keys: bad });
   const before = getSettings();
   const stmt = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
-  for (const [k, v] of Object.entries(clean)) stmt.run(k, v);
+  for (const [k, v] of Object.entries(clean)) {
+    if (k === 'VDOCIPHER_API_SECRET' && v === '__SET__') continue; // placeholder → keep stored secret
+    stmt.run(k, v);
+  }
   const changed = Object.keys(clean);
   if (changed.includes('COURSE_PRICE') && before.COURSE_PRICE !== clean.COURSE_PRICE) {
     audit(req.user.id, 'price_changed', 'settings', 'COURSE_PRICE', `${before.COURSE_PRICE} -> ${clean.COURSE_PRICE}`);

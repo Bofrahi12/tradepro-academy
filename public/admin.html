@@ -188,7 +188,7 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('modal-cancel').onclick = closeModal;
 document.getElementById('modal-back').addEventListener('click', (e) => { if (e.target.id === 'modal-back') closeModal(); });
 
-const PROVIDERS = [['youtube', 'YouTube'], ['vimeo', 'Vimeo'], ['cloudflare', 'Cloudflare Stream'], ['mp4', 'رابط MP4 مباشر']];
+const PROVIDERS = [['youtube', 'YouTube'], ['vimeo', 'Vimeo'], ['cloudflare', 'Cloudflare Stream'], ['mp4', 'رابط MP4 مباشر'], ['vdocipher', 'VdoCipher DRM (معرّف الفيديو)']];
 
 // ---------- tabs ----------
 document.getElementById('tabs').addEventListener('click', (e) => {
@@ -814,7 +814,11 @@ const SETTING_GROUPS = [
   { title: '📊 التتبع والتحليلات', keys: [
     ['UMAMI_WEBSITE_ID', 'معرّف موقع Umami (اختياري)', null, 'ltr'],
   ]},
-];
+  { title: '🔐 حماية الفيديو DRM (VdoCipher)', keys: [
+    ['VDOCIPHER_API_SECRET', 'سر API الخاص بـ VdoCipher — يبقى مخفياً دائماً: «__SET__» تعني أنه محفوظ. الصق سراً جديداً فقط عند تغييره', 'password', 'ltr'],
+  ]},
+];  
+
 async function renderSettings() {
   let s;
   try { s = await Store.adminSettings(); } catch { s = await Store.settings(); }
@@ -827,7 +831,7 @@ async function renderSettings() {
       let input;
       if (type === 'textarea') input = `<textarea id="set-${key}" rows="3">${E(v)}</textarea>`;
       else if (type === 'select') input = `<select id="set-${key}">${options.map((o) => `<option value="${o[0]}" ${v === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
-      else input = `<input id="set-${key}" value="${E(v)}" ${dir ? `dir="${dir}" style="text-align:left"` : ''}>`;
+      else input = `<input id="set-${key}" ${type === 'password' ? 'type="password" autocomplete="new-password"' : ''} value="${E(v)}" ${dir ? `dir="${dir}" style="text-align:left"` : ''}>`;
       return `<div class="field"><label><code dir="ltr" style="color:var(--green)">${key}</code> — ${label}</label>${input}</div>`;
     }).join('')}
     </div></div>`).join('') +

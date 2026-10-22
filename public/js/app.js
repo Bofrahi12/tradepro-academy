@@ -170,7 +170,12 @@
       `<p class="poster-fallback-msg">تعذر تحميل صورة المعاينة، لكن يمكنك تشغيل الفيديو مباشرة.</p></div>`;
   }
 
-  function videoEmbed(provider, url, poster) {
+  function videoEmbed(provider, url, poster, lessonId) {
+    // VdoCipher DRM: the server never ships the video ID/URL — the lesson
+    // page fills this slot by fetching a one-time OTP from /vdo-otp.
+    if (provider === 'vdocipher') {
+      return `<div class="vdo-slot" data-vdo-slot="${esc(lessonId || '')}"><div class="video-empty"><div><div style="font-size:2.4rem;margin-bottom:10px">🔒</div><p>جاري تجهيز المشغّل الآمن…</p></div></div></div>`;
+    }
     if (!url) return `<div class="video-empty"><div><div style="font-size:2.4rem;margin-bottom:10px">🎬</div><p>سيتم إضافة فيديو هذا الدرس قريباً.</p></div></div>`;
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
     const vm = url.match(/vimeo\.com\/(\d+)/);
