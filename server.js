@@ -517,13 +517,16 @@ app.get('/api/lesson/:id/vdo-otp', async (req, res) => {
     const data = await r.json().catch(() => null);
     if (!r.ok || !data || !data.otp || !data.playbackInfo) {
       console.error('[vdocipher] otp failed', r.status, data && data.message);
-      return res.status(502).json({ error: 'drm_unavailable' });
+      const isAdmin = u && (u.role === 'admin' || u.role === 'super_admin');
+      // Admin-only diagnostics: VdoCipher's own status/message (never the secret).
+      return res.status(502).json({ error: 'drm_unavailable', ...(isAdmin ? { vdo_status: r.status, vdo_message: (data && data.message) || null } : {}) });
     }
     if (u) audit(u.id, 'vdo_otp_issued', 'lesson', String(l.id), '');
     res.json({ otp: data.otp, playbackInfo: data.playbackInfo });
   } catch (e) {
     console.error('[vdocipher] otp error', e.message);
-    res.status(502).json({ error: 'drm_unavailable' });
+    const isAdmin = u && (u.role === 'admin' || u.role === 'super_admin');
+    res.status(502).json({ error: 'drm_unavailable', ...(isAdmin ? { vdo_error: String(e.message || e).slice(0, 120) } : {}) });
   }
 });
 
