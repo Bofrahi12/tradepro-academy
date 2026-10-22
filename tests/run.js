@@ -223,9 +223,9 @@ test('coupon validate: valid / invalid', async () => {
   let r = await a.get('/api/coupon/validate?code=TEST20');
   assert.equal(r.status, 200);
   assert.equal(r.data.percent_off, 20);
-  assert.equal(r.data.before, 2000);
-  assert.equal(r.data.discount, 400);
-  assert.equal(r.data.final, 1600);
+  assert.equal(r.data.before, 4900);
+  assert.equal(r.data.discount, 980);
+  assert.equal(r.data.final, 3920);
   assert.equal(r.data.currency, 'usd');
 
   r = await a.get('/api/coupon/validate?code=NOPE');
@@ -237,7 +237,7 @@ test('checkout ignores browser discount: fake coupon => full price', async () =>
   const r = await a.post('/api/checkout/session', { email: 'fake1@t.local', coupon_code: 'HACK99' });
   assert.equal(r.status, 200);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(r.data.order_id);
-  assert.equal(order.amount, 2000);
+  assert.equal(order.amount, 4900);
   assert.equal(order.discount_amount, 0);
   assert.equal(order.coupon_code, null);
   assert.equal(order.status, 'pending');
@@ -248,8 +248,8 @@ test('checkout with valid coupon stores server-computed discount', async () => {
   const r = await a.post('/api/checkout/session', { email: 'fake2@t.local', coupon_code: 'TEST20' });
   assert.equal(r.status, 200);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(r.data.order_id);
-  assert.equal(order.amount, 1600);
-  assert.equal(order.discount_amount, 400);
+  assert.equal(order.amount, 3920);
+  assert.equal(order.discount_amount, 980);
   assert.equal(order.coupon_code, 'TEST20');
 });
 

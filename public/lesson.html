@@ -17,6 +17,9 @@
 .quiz-q label:hover{border-color:var(--gold)}
 .quiz-q input{margin-left:8px}
 .quiz-q.correct label.correct-answer{border-color:#00e5a0;background:rgba(0,229,160,.1)}
+.viewer-watermark{position:absolute;z-index:5;pointer-events:none;color:rgba(255,255,255,.55);font-size:.8rem;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.85);white-space:nowrap}
+.wm-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);z-index:4;pointer-events:none;color:rgba(255,255,255,.07);font-size:1.6rem;font-weight:900;white-space:nowrap}
+.video-wrap.capture-blur video{filter:blur(24px)}
 .quiz-q.wrong label.wrong-answer{border-color:#ff6b6b;background:rgba(255,107,107,.1)}
 </style></head>
 <body>
@@ -218,6 +221,58 @@
     if(m){clearInterval(check);initQuiz(m[1]);}
   }, 500);
   setTimeout(function(){clearInterval(check);}, 10000);
+})();
+</script>
+
+<script>
+// ---- Content protection: identity watermark + capture deterrents (MP4 lessons) ----
+(function () {
+  var tries = 0;
+  var timer = setInterval(async function () {
+    tries++;
+    var wrap = document.getElementById('player');
+    var video = wrap ? wrap.querySelector('video') : null;
+    if (!video) { if (tries > 40) clearInterval(timer); return; }
+    clearInterval(timer);
+    video.setAttribute('controlsList', 'nodownload');
+    video.setAttribute('disablepictureinpicture', '');
+    wrap.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    var note = document.createElement('div');
+    note.style.cssText = 'margin-top:10px;padding:10px 14px;border:1px solid rgba(245,197,24,.25);border-radius:10px;background:rgba(245,197,24,.05);color:var(--muted);font-size:.85rem';
+    note.textContent = '🔒 فيديو محمي: المشاهدة شخصية لحسابك فقط، وتظهر على الفيديو علامة مائية بهويتك. تسجيل الشاشة أو التصوير أو مشاركة الحساب قد يؤدي إلى حظر الحساب.';
+    wrap.parentNode.insertBefore(note, wrap.nextSibling);
+    var viewer = null;
+    try { viewer = await Store.me(); } catch (e) {}
+    if (viewer && viewer.email) {
+      var label = (viewer.name ? viewer.name + ' • ' : '') + viewer.email + ' • #' + viewer.id;
+      var wm = document.createElement('div');
+      wm.className = 'viewer-watermark'; wm.textContent = label; wrap.appendChild(wm);
+      var center = document.createElement('div');
+      center.className = 'wm-center'; center.textContent = viewer.email; wrap.appendChild(center);
+      var spots = [
+        { top: '8%', start: '4%' }, { top: '8%', end: '4%' },
+        { bottom: '14%', start: '4%' }, { bottom: '14%', end: '4%' },
+        { top: '42%', start: '30%' }
+      ];
+      var si = 0;
+      function place() {
+        var s = spots[si % spots.length]; si++;
+        wm.style.top = s.top || 'auto'; wm.style.bottom = s.bottom || 'auto';
+        wm.style.insetInlineStart = s.start || 'auto'; wm.style.insetInlineEnd = s.end || 'auto';
+      }
+      place(); setInterval(place, 7000);
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'PrintScreen' || (e.metaKey && e.shiftKey)) {
+        wrap.classList.add('capture-blur');
+        if (window.App && App.toast) App.toast('⚠️ التصوير والتسجيل ممنوعان — هذا المحتوى محمي ومرتبط بحسابك.');
+        setTimeout(function () { wrap.classList.remove('capture-blur'); }, 2500);
+      }
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden && !video.paused) video.pause();
+    });
+  }, 500);
 })();
 </script>
 </body>

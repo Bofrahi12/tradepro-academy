@@ -193,7 +193,7 @@
       const lazySrc = embedSrc.replace('&autoplay=1', '').replace('?autoplay=1', '').replace('?autoplay=true', '').replace('&autoplay=true', '');
       return `<iframe src="${esc(lazySrc)}" allow="${esc(allow)}" allowfullscreen loading="lazy" title="فيديو الدرس"></iframe>`;
     }
-    return `<video controls preload="metadata"${poster ? ` poster="${esc(poster)}"` : ''} src="${esc(url)}" playsinline style="width:100%">` +
+    return `<video controls controlsList="nodownload" disablepictureinpicture oncontextmenu="return false" preload="metadata"${poster ? ` poster="${esc(poster)}"` : ''} src="${esc(url)}" playsinline style="width:100%">` +
       `متصفحك لا يدعم تشغيل الفيديو.</video>`;
   }
 

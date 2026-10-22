@@ -378,9 +378,10 @@ app.get('/api/curriculum', (req, res) => {
 });
 
 // Signed media URLs for private MP4s (optional, enabled via PROTECT_MEDIA=true)
-function mediaToken(lessonId, ttlSec = 7200) {
+function mediaToken(lessonId, userId, ttlSec = 1800) {
+  // Token is bound to ONE user account: a shared link is useless to anyone else.
   const exp = Math.floor(Date.now() / 1000) + ttlSec;
-  const token = crypto.createHmac('sha256', MEDIA_SECRET).update(`${lessonId}.${exp}`).digest('hex');
+  const token = crypto.createHmac('sha256', MEDIA_SECRET).update(`${lessonId}.${userId}.${exp}`).digest('hex');
   return { token, exp };
 }
 function protectMediaUrl(l, u) {
@@ -389,7 +390,7 @@ function protectMediaUrl(l, u) {
     const v = String(l.video_url);
     return v.startsWith('uploads/') ? '/' + v : v;
   }
-  const { token, exp } = mediaToken(l.id);
+  const { token, exp } = mediaToken(l.id, u ? u.id : 0);
   return `/api/media/lesson/${l.id}?token=${token}&exp=${exp}`;
 }
 app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
@@ -399,7 +400,7 @@ app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
   const privileged = u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled);
   if (!privileged && !l.is_free_preview) return res.status(403).json({ error: 'enrollment_required' });
   const { token, exp } = req.query;
-  const expected = crypto.createHmac('sha256', MEDIA_SECRET).update(`${l.id}.${exp}`).digest('hex');
+  const expected = crypto.createHmac('sha256', MEDIA_SECRET).update(`${l.id}.${req.session.userId}.${exp}`).digest('hex');
   if (!exp || Number(exp) < Date.now() / 1000 || !token || !timingSafeEq(token, expected)) {
     return res.status(403).json({ error: 'invalid_media_token' });
   }
@@ -433,6 +434,8 @@ app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
         'Accept-Ranges': 'bytes',
         'Content-Length': chunkSize,
         'Content-Type': contentType,
+        'Content-Disposition': 'inline',
+        'Cache-Control': 'private, no-store',
       });
       fs.createReadStream(filePath, { start, end }).pipe(res);
     } else {
@@ -440,6 +443,8 @@ app.get('/api/media/lesson/:id', requireAuth, (req, res) => {
         'Content-Length': stat.size,
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
+        'Content-Disposition': 'inline',
+        'Cache-Control': 'private, no-store',
       });
       fs.createReadStream(filePath).pipe(res);
     }
@@ -1231,11 +1236,12 @@ app.use('/videos/:file', (req, res, next) => {
   const file = String(req.params.file || '');
   if (file === 'intro.mp4' || file === 'intro-poster.jpg') return next();
   if (!file.toLowerCase().endsWith('.mp4')) return next();
-  // Admins and enrolled students may use direct URLs (e.g. admin previews);
-  // everyone else must go through signed /api/media/lesson/:id URLs.
+  // Direct file URLs are admin-only (previews). Everyone else, students
+  // included, must stream through the signed, user-bound /api/media URL —
+  // a direct path would hand them the raw downloadable file.
   try {
     const u = me(req);
-    if (u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled)) return next();
+    if (u && (u.role === 'admin' || u.role === 'super_admin')) return next();
   } catch (e) { /* fall through to 403 */ }
   return res.status(403).json({ error: 'enrollment_required' });
 });
@@ -1248,7 +1254,7 @@ app.use('/uploads/:file', (req, res) => {
   let allowed = false;
   try {
     const u = me(req);
-    allowed = !!(u && (u.role === 'admin' || u.role === 'super_admin' || u.enrolled));
+    allowed = !!(u && (u.role === 'admin' || u.role === 'super_admin'));
   } catch (e) { /* fall through to 403 */ }
   if (!allowed) return res.status(403).json({ error: 'enrollment_required' });
   res.sendFile(path.join(UPLOAD_DIR, file), (err) => {
