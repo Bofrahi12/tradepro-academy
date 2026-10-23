@@ -511,7 +511,9 @@ app.get('/api/lesson/:id/vdo-otp', async (req, res) => {
       headers: { Authorization: `Apisecret ${secret}`, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
         ttl: 300,
-        annotate: JSON.stringify([{ text: who, alpha: '0.40', color: '0xFFFFFF', size: 15, interval: 5000, skip: '2000' }]),
+        ...(u ? { userId: `u-${u.id}` } : {}),
+        // VdoCipher watermark annotations require a `type` ('rtext' = moving text).
+        annotate: JSON.stringify([{ type: 'rtext', text: who, alpha: '0.40', color: '0xFFFFFF', size: 15, interval: 5000, skip: '2000' }]),
       }),
     });
     const data = await r.json().catch(() => null);
