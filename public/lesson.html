@@ -103,7 +103,7 @@
       const slot = document.querySelector('[data-vdo-slot]');
       if (!slot) return;
       try {
-        const r = await fetch(`/api/lesson/${lesson.id}/vdo-otp`, { credentials: 'same-origin' });
+        const r = await fetch(`/api/lesson/${lesson.id}/vdo-otp`, { credentials: 'same-origin', cache: 'no-store' });
         const d = await r.json().catch(() => null);
         if (!r.ok || !d || !d.otp) throw new Error('otp');
         const f = document.createElement('iframe');

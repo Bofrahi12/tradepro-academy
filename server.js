@@ -492,6 +492,7 @@ app.get('/api/lesson/:id', (req, res) => {
 // playbackInfo pair, and the DRM player burns a dynamic watermark with the
 // viewer's identity (name • email • id) into the stream.
 app.get('/api/lesson/:id/vdo-otp', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   if (!V.isId(req.params.id)) return res.status(404).json({ error: 'not_found' });
   const u = me(req);
   const l = db.prepare('SELECT * FROM lessons WHERE id = ? AND is_visible = 1').get(req.params.id);
@@ -519,16 +520,13 @@ app.get('/api/lesson/:id/vdo-otp', async (req, res) => {
     const data = await r.json().catch(() => null);
     if (!r.ok || !data || !data.otp || !data.playbackInfo) {
       console.error('[vdocipher] otp failed', r.status, data && data.message);
-      const isAdmin = u && (u.role === 'admin' || u.role === 'super_admin');
-      // Admin-only diagnostics: VdoCipher's own status/message (never the secret).
-      return res.status(502).json({ error: 'drm_unavailable', ...(isAdmin ? { vdo_status: r.status, vdo_message: (data && data.message) || null } : {}) });
+      return res.status(502).json({ error: 'drm_unavailable' });
     }
     if (u) audit(u.id, 'vdo_otp_issued', 'lesson', String(l.id), '');
     res.json({ otp: data.otp, playbackInfo: data.playbackInfo });
   } catch (e) {
     console.error('[vdocipher] otp error', e.message);
-    const isAdmin = u && (u.role === 'admin' || u.role === 'super_admin');
-    res.status(502).json({ error: 'drm_unavailable', ...(isAdmin ? { vdo_error: String(e.message || e).slice(0, 120) } : {}) });
+    res.status(502).json({ error: 'drm_unavailable' });
   }
 });
 
